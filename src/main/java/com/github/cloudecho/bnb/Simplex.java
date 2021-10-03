@@ -32,6 +32,9 @@ import java.util.Arrays;
  *  [C -z
  *   A b]
  * </pre>
+ *
+ * @see <a href="https://math.mit.edu/~goemans/18310S15/lpnotes310.pdf">
+ * The lecture notes of Linear Programming by Michel Goemans</a>
  */
 public class Simplex {
     static final Log LOG = LogFactory.getLog(Simplex.class);
@@ -104,7 +107,9 @@ public class Simplex {
 
             while (!this.pivot()) ;
             this.setXnMax();
-            this.state = State.SOLVED;
+            if (State.SOLVING == this.state) {
+                this.state = State.SOLVED;
+            }
         } else {
             LOG.debug("fail to init base");
             this.state = State.NO_SOLUTION;
@@ -256,6 +261,9 @@ public class Simplex {
         return 1 == count ? w : -1;
     }
 
+    /**
+     * Return {@true} if STOP
+     */
     private boolean pivot() {
         final int w = indexOfMaxc();
         final double maxc = table[0][w];
@@ -267,10 +275,11 @@ public class Simplex {
         this.iterations++;
 
         // w enter base
-        int r = indexOfNewBase(w);
-        // not found, i.e. each of table[][w] is zero
+        int r = indexOfMinRatio(w);
+        // not found, i.e. each of table[][w] <=0, unbounded
         if (-1 == r) {
-            throw new IllegalArgumentException(String.format("each of A[][%d] is zero", w));
+            this.state = State.UNBOUNDED;
+            return true;
         }
         base[r - 1] = w;
 
@@ -293,8 +302,8 @@ public class Simplex {
         return w;
     }
 
-    private int indexOfNewBase(int c) {
-        double minv = Double.MAX_VALUE;
+    private int indexOfMinRatio(int c) {
+        double minv = 0;
         int w = -1;
         for (int i = 1; i <= m; i++) {
             double v = table[i][c];
@@ -302,9 +311,15 @@ public class Simplex {
                 continue;
             }
             v = table[i][n] / v; // i.e. b/v
-            if (minv > v) {
+            if (minv > v || -1 == w) {
                 minv = v;
                 w = i;
+            } else if (minv == v) {
+                // Bland’s anticycling pivoting rule
+                if (base[w - 1] > base[i - 1]) {
+                    // base[i-1] leave
+                    w = i;
+                }
             }
         }
         return w;

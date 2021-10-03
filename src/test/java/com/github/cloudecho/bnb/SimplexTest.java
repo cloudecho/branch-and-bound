@@ -12,14 +12,14 @@ public class SimplexTest {
 
     @Test
     public void testSolve() {
-        double[] c = new double[]{5, 4, 6, 0, 0, 0, 0};
-        double[][] a = new double[][]{
-                new double[]{1, 1, 1, 1, 0, 0, 0},
-                new double[]{1, 0.5, 0, 0, 1, 0, 0},
-                new double[]{3, 0, 1, 0, 0, 1, 0},
-                new double[]{0, -2, -3, 0, 0, 0, -1},
+        double[] c = {5, 4, 6, 0, 0, 0, 0};
+        double[][] a = {
+                {1, 1, 1, 1, 0, 0, 0},
+                {1, 0.5, 0, 0, 1, 0, 0},
+                {3, 0, 1, 0, 0, 1, 0},
+                {0, -2, -3, 0, 0, 0, -1},
         };
-        double[] b = new double[]{60, 32, 43, -86};
+        double[] b = {60, 32, 43, -86};
 
         Simplex simplex = new Simplex(c, a, b);
         simplex.solve();
@@ -35,18 +35,33 @@ public class SimplexTest {
 
     @Test
     public void testSolveNoSolution() {
-        double[] c = new double[]{5, 4, 6, 0, 0, 0, 0};
-        double[][] a = new double[][]{
-                new double[]{1, 1, 1, 1, 0, 0, 0},
-                new double[]{1, 0.5, 0, 0, 1, 0, 0},
-                new double[]{3, 0, 1, 0, 0, 1, 0},
-                new double[]{0, -2, -3, 0, 0, 0, -1},
+        double[] c = {5, 4, 6, 0, 0, 0, 0};
+        double[][] a = {
+                {1, 1, 1, 1, 0, 0, 0},
+                {1, 0.5, 0, 0, 1, 0, 0},
+                {3, 0, 1, 0, 0, 1, 0},
+                {0, -2, -3, 0, 0, 0, -1},
         };
-        double[] b = new double[]{-60, -32, -43, 86};
+        double[] b = {-60, -32, -43, 86};
 
         Simplex simplex = new Simplex(c, a, b);
         simplex.solve();
 
         Assert.assertEquals("state", State.NO_SOLUTION, simplex.getState());
+    }
+
+    @Test
+    public void testSolveAnticycling() {
+        double[] c = {4, 1.92, -16, -0.96, 0, 0};
+        double[][] a = {
+                {-12.5, -2, 12.5, 1, 1, 0},
+                {1, 0.24, -2, -0.24, 0, 1},
+        };
+        double[] b = {0, 0};
+
+        Simplex simplex = new Simplex(c, a, b);
+        simplex.solve();
+
+        Assert.assertEquals("state", State.UNBOUNDED, simplex.getState());
     }
 }
