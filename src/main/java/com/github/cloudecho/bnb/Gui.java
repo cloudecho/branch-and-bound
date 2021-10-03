@@ -17,6 +17,7 @@ public class Gui extends JFrame {
         }
 
         Gui gui = new Gui();
+        gui.pack();
         gui.setVisible(true);
     }
 }

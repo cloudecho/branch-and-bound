@@ -91,17 +91,30 @@ public class Simplex {
     }
 
     private int iterations = 0;
+    private State state = State.ZERO;
 
     public void solve() {
+        this.state = State.SOLVING;
         this.preprocess();
 
         if (this.initBase()) {
+            LOG.debug("success to init base");
             this.gaussian();
             LOG.debug(this);
 
             while (!this.pivot()) ;
             this.setXnMax();
+            this.state = State.SOLVED;
+        } else {
+            LOG.debug("fail to init base");
+            this.state = State.NO_SOLUTION;
         }
+
+        LOG.debug(this);
+    }
+
+    public State getState() {
+        return state;
     }
 
     private void setXnMax() {
@@ -321,6 +334,7 @@ public class Simplex {
         b.append("max=").append(max);
         b.append('\n').append(" iter=").append(iterations);
         b.append(" base=").append(Arrays.toString(base));
+        b.append(" state=").append(state);
         b.append('\n').append(" x=").append(Arrays.toString(x));
 
         // table

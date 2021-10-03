@@ -18,4 +18,4 @@ java -jar target/bnb-*-jar-with-dependencies.jar
 
 ## Screenshot
 
-![A snapshot](./bnb-screenshot.png)
+![A screenshot](./bnb-screenshot.png)
