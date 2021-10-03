@@ -354,12 +354,25 @@ public class Simplex {
 
         // table
         b.append('\n').append(" [");
-        for (int i = 0; i < table.length; i++) {
+        for (int i = 0; i <= m; i++) {
+            // end line
             if (i > 0) {
                 b.append("\n  ");
             }
-            for (double d : table[i]) {
-                b.append(String.format("%-8.3f", d)).append(' ');
+            // hr
+            if (1 == i) {
+                for (int j = 0; j < n; j++) {
+                    b.append(" -----    ");
+                }
+                b.append(" + -----\n  ");
+            }
+            // print table[i]
+            for (int j = 0; j <= n; j++) {
+                if (n == j) {
+                    b.append(" | ");
+                }
+                b.append((i > 0 && j == base[i - 1]) ? '*' : ' '); // base var
+                b.append(String.format("%-8.3f", table[i][j])).append(' ');
             }
         }
         b.setCharAt(b.length() - 1, ']');
