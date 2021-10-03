@@ -9,24 +9,22 @@ import java.util.Arrays;
  * s.t. AX = b
  *      X >= 0
  *
- * C = (c1 c2 ... c_n)
- * X = (x1 x2 ... x_n)'
- * A = [a11 a12 ... a1n
- *      a21 a22 ... a2n
- *      ... ... ...
- *      a_m1 a_m2 ... a_mn]
- * b = (b1 b2 ... b_m)'
+ * C = (c1 ... c_n)
+ * X = (x1 ... x_n)'
+ * A = [ a11 ... a1n
+ *       ... ... ...
+ *      a_m1 ... a_mn]
+ * b = (b1 ... b_m)'
  * </pre>
  * <p>
  * Simplex table:
  * <pre>
- *  x1  x2  ... x_n  b
- *  --  --  --- ---  --
- *  c1  c2  ... c_n  -z
- *  a11 a12 ... a1n  b1
- *  a21 a22 ... a2n  b2
- *  ... ... ...
- *  a_m1 a_m2 ... a_mn b_m
+ *   x1  ... x_n  | b
+ *   c1  ... c_n  | -z
+ *  ---  --- ---  + ---
+ *  a11  ... a1n  | b1
+ *  ...      ...  | ...
+ *  a_m1 ... a_mn | b_m
  *
  *  i.e.
  *  [C -z
