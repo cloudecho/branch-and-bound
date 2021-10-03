@@ -51,7 +51,7 @@ public class Simplex {
     /**
      * The vector X
      */
-    private double[] x;
+    private final double[] x;
 
     private int precision = DEFAULT_PRECISION;
 
@@ -97,6 +97,7 @@ public class Simplex {
     public void solve() {
         this.state = State.SOLVING;
         this.preprocess();
+        LOG.debug("preprocess", this);
 
         if (this.initBase()) {
             LOG.debug("success to init base");
@@ -130,6 +131,10 @@ public class Simplex {
     }
 
     private void preprocess() {
+        for (int i = 0; i < m; i++) {
+            this.base[i] = -1;
+        }
+
         // for each row, except 0-th
         for (int i = 1; i <= m; i++) {
             double b = table[i][n];
@@ -143,10 +148,6 @@ public class Simplex {
     }
 
     private boolean initBase() {
-        for (int i = 0; i < m; i++) {
-            this.base[i] = -1;
-        }
-
         int[] vars = arr0to(n);
         int count = 0;
         for (int j = n - 1; j >= 0 && count < m; j--) {
@@ -161,7 +162,7 @@ public class Simplex {
         if (count < m) {
             for (int i = 0; i < m; i++) {
                 if (base[i] < 0) {
-                    int k = nextVar(vars);
+                    int k = nextVar(vars, i + 1);
                     if (k < 0) { // -1
                         return false;
                     }
@@ -216,32 +217,29 @@ public class Simplex {
         }
     }
 
-    private int nextVar(int[] vars) {
+    private int nextVar(int[] vars, int r) {
+        double maxc = 0d;
+        int k = -1; // not found
         for (int j = 0; j < vars.length; j++) {
-            if (vars[j] >= 0) {
-                vars[j] = -1; // mark selected
-                if (hasPositive(j)) {
-                    return j; // as j == vars[j]
-                }
+            if (vars[j] < 0 || table[r][j] <= 0d) {
+                continue;
+            }
+            final double c = table[0][j];
+            if (-1 == k || maxc < c) {
+                maxc = c;
+                k = vars[j];
             }
         }
-        // not found
-        return -1;
-    }
-
-    private boolean hasPositive(int j) {
-        for (int i = 1; i <= m; i++) {
-            if (table[i][j] > 0d) {
-                return true;
-            }
+        if (k >= 0) {
+            vars[k] = -1; // mark selected
         }
-        return false;
+        return k;
     }
 
     private static int[] arr0to(int k) {
         int[] arr = new int[k];
-        for (int i = 0; i < k; i++) {
-            arr[i] = i;
+        for (int j = 0; j < k; j++) {
+            arr[j] = j;
         }
         return arr;
     }
@@ -260,7 +258,7 @@ public class Simplex {
     }
 
     /**
-     * Return {@true} if STOP
+     * Return {@code true} if STOP
      */
     private boolean pivot() {
         final int w = indexOfMaxc();
@@ -337,6 +335,10 @@ public class Simplex {
 
     public void setPrecision(int precision) {
         this.precision = precision;
+    }
+
+    public int getPrecision() {
+        return precision;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.github.cloudecho.bnb;
 
+import java.util.Arrays;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -67,7 +68,16 @@ class Log {
     private String toString(Object... msg) {
         StringBuilder b = new StringBuilder(Thread.currentThread().getName());
         for (Object m : msg) {
-            b.append(' ').append(m);
+            b.append(' ');
+            if (m instanceof Object[]) {
+                b.append(Arrays.deepToString((Object[]) m));
+            } else if (m instanceof int[]) {
+                b.append(Arrays.toString((int[]) m));
+            } else if (m instanceof double[]) {
+                b.append(Arrays.toString((double[]) m));
+            } else {
+                b.append(m);
+            }
         }
         return b.toString();
     }
