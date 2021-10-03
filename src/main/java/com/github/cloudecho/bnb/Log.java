@@ -20,19 +20,44 @@ class Log {
     }
 
     void debug(Object... msg) {
-        logger.fine(toString(msg));
+        if (isDebugEnabled()) {
+            logger.fine(toString(msg));
+        }
     }
 
     void info(Object... msg) {
-        logger.info(toString(msg));
+        if (isInfoEnabled()) {
+            logger.info(toString(msg));
+        }
     }
 
+
     void warn(Object... msg) {
-        logger.warning(toString(msg));
+        if (isWarnEnabled()) {
+            logger.warning(toString(msg));
+        }
     }
 
     void error(Object... msg) {
-        logger.severe(toString(msg));
+        if (isErrorEnabled()) {
+            logger.severe(toString(msg));
+        }
+    }
+
+    boolean isDebugEnabled() {
+        return logger.isLoggable(Level.FINE);
+    }
+
+    private boolean isInfoEnabled() {
+        return logger.isLoggable(Level.INFO);
+    }
+
+    private boolean isWarnEnabled() {
+        return logger.isLoggable(Level.WARNING);
+    }
+
+    private boolean isErrorEnabled() {
+        return logger.isLoggable(Level.SEVERE);
     }
 
     void setLevel(Level level) {

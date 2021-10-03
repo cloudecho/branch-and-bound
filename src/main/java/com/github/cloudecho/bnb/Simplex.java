@@ -267,7 +267,7 @@ public class Simplex {
     private boolean pivot() {
         final int w = indexOfMaxc();
         final double maxc = table[0][w];
-        LOG.debug("iter=" + iterations, "w=" + w, "maxc=" + Maths.round(maxc, precision));
+        LOG.debug("iter=" + iterations, "e=" + w, "maxc=" + Maths.round(maxc, precision));
         if (maxc <= 0) {
             return true;
         }
