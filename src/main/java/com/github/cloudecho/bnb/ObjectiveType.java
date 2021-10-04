@@ -1,9 +1,9 @@
 package com.github.cloudecho.bnb;
 
 public enum ObjectiveType {
-    MAX, MIN;
+    max, min;
 
     public boolean isMax() {
-        return MAX.equals(this);
+        return max.equals(this);
     }
 }

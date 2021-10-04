@@ -36,9 +36,8 @@ import java.util.List;
  * @see <a href="https://math.mit.edu/~goemans/18310S15/lpnotes310.pdf">
  * The lecture notes of Linear Programming by Michel Goemans</a>
  */
-public class Simplex {
+public class Simplex implements LPSolver {
     static final Log LOG = LogFactory.getLog(Simplex.class);
-    static final int DEFAULT_PRECISION = 7;
 
     private final int m;
     private final int n;
@@ -97,6 +96,7 @@ public class Simplex {
     private int iterations = 0;
     private State state = State.ZERO;
 
+    @Override
     public void solve() {
         this.state = State.SOLVING;
         this.preprocess();
@@ -112,6 +112,7 @@ public class Simplex {
         LOG.debug(this);
     }
 
+    @Override
     public State getState() {
         return state;
     }
@@ -373,6 +374,7 @@ public class Simplex {
         return w;
     }
 
+    @Override
     public double[] getX() {
         return this.x;
     }
@@ -381,14 +383,27 @@ public class Simplex {
         return this.max;
     }
 
+    @Override
+    public double getObjective() {
+        return this.getMax();
+    }
+
+    @Override
+    public ObjectiveType getObjectiveType() {
+        return ObjectiveType.max;
+    }
+
+    @Override
     public int getIterations() {
         return iterations;
     }
 
+    @Override
     public void setPrecision(int precision) {
         this.precision = precision;
     }
 
+    @Override
     public int getPrecision() {
         return precision;
     }

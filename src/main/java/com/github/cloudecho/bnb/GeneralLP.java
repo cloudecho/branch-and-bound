@@ -20,7 +20,7 @@ import java.util.*;
  * @see <a href="https://math.mit.edu/~goemans/18310S15/lpnotes310.pdf">
  * The lecture notes of Linear Programming by Michel Goemans</a>
  */
-public class GeneralLP {
+public class GeneralLP implements LPSolver {
     static final Log LOG = LogFactory.getLog(GeneralLP.class);
 
     private final int m;
@@ -51,12 +51,12 @@ public class GeneralLP {
 
     private double[] x2 = new double[0];
 
-    private int precision = Simplex.DEFAULT_PRECISION;
+    private int precision = DEFAULT_PRECISION;
 
     /**
      * Constructor.
      *
-     * @param objectiveType The objective type (MAX or MIN)
+     * @param objectiveType The objective type (max or min)
      * @param c0            c0
      * @param c             The coefficient vector C, 1 row, n columns
      * @param a             The matrix A, m rows, n columns
@@ -109,6 +109,7 @@ public class GeneralLP {
     private int iterations = 0;
     private State state = State.ZERO;
 
+    @Override
     public void solve() {
         LOG.debug(this);
         standardize();
@@ -205,18 +206,17 @@ public class GeneralLP {
         LOG.debug("a2", a2);
     }
 
-    public void setPrecision(int precision) {
-        this.precision = precision;
-    }
-
+    @Override
     public ObjectiveType getObjectiveType() {
         return objectiveType;
     }
 
+    @Override
     public double getObjective() {
         return objective;
     }
 
+    @Override
     public double[] getX() {
         return x;
     }
@@ -225,14 +225,22 @@ public class GeneralLP {
         return x2;
     }
 
+    @Override
     public State getState() {
         return state;
     }
 
+    @Override
     public int getIterations() {
         return iterations;
     }
 
+    @Override
+    public void setPrecision(int precision) {
+        this.precision = precision;
+    }
+
+    @Override
     public int getPrecision() {
         return precision;
     }
