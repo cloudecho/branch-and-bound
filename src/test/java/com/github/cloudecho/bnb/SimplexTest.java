@@ -51,6 +51,24 @@ public class SimplexTest {
     }
 
     @Test
+    public void testSolveMax0() {
+        double[] c = {5, 4, 6, 0, 0, 0, 0};
+        double[][] a = {
+                {1, 1, 1, 1, 0, 0, 0},
+                {1, -0.5, 0, 0, 1, 0, 0},
+                {3, 0, -1, 0, 0, 1, 0},
+                {0, 2, -3, 0, 0, 0, 1},
+        };
+        double[] b = {-0, -0, -0, 0};
+
+        Simplex simplex = new Simplex(c, a, b);
+        simplex.solve();
+
+        Assert.assertEquals("state", State.SOLVED, simplex.getState());
+        Assert.assertEquals("max", 0, (int) simplex.getMax());
+    }
+
+    @Test
     public void testSolveAnticycling() {
         double[] c = {4, 1.92, -16, -0.96, 0, 0};
         double[][] a = {
@@ -64,4 +82,23 @@ public class SimplexTest {
 
         Assert.assertEquals("state", State.UNBOUNDED, simplex.getState());
     }
+
+    @Test
+    public void testSolveAnticycling2() {
+        double[] c = {5, 4, 6, 0, 0, 0, 0};
+        double[][] a = {
+                {1, 1, 1, 1, 0, 0, 0},
+                {1, -0.5, 0, 0, 0, 0, 0},
+                {3, 0, -1, 0, 0, 1, 0},
+                {0, 2, -3, 0, 0, 0, 1},
+        };
+        double[] b = {-0, -0, -0, 0};
+
+        Simplex simplex = new Simplex(c, a, b);
+        simplex.solve();
+
+        Assert.assertEquals("state", State.SOLVED, simplex.getState());
+        Assert.assertEquals("max", 0, (int) simplex.getMax());
+    }
+
 }

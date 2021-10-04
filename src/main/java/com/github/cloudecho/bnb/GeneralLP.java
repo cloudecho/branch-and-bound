@@ -257,13 +257,13 @@ public class GeneralLP {
             b.append(freeVars.contains(j + 1) ? '*' : ' ');
             b.append(String.format("%-8.3f", c[j])).append(' ');
         }
-        b.append(" = ").append(objectiveType).append("-c0\n  ");
+        b.append(" =  ").append(objectiveType).append("-c0\n  ");
         // hr
         for (int j = 0; j < n; j++) {
             b.append(" -----    ");
         }
-        b.append(" + -----\n  ");
-        
+        b.append(" +  -----\n  ");
+
         // print a
         for (int i = 0; i < m; i++) {
             // end line
@@ -275,7 +275,7 @@ public class GeneralLP {
             for (int j = 0; j < n; j++) {
                 b.append(String.format(" %-8.3f", a[i][j])).append(' ');
             }
-            b.append(String.format(" %-2s ", signs[i].getString())).append(this.b[i]);
+            b.append(String.format(" %-2s  ", signs[i].getString())).append(this.b[i]);
         }
         b.append(']');
 

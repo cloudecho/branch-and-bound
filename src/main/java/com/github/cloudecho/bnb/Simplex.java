@@ -1,6 +1,8 @@
 package com.github.cloudecho.bnb;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Primal Simplex.
@@ -43,6 +45,8 @@ public class Simplex {
     private final double[][] table; // double[m+1][n+1]
     private final int[] base; // int[m]
 
+    private int n2;
+
     /**
      * Objective = max
      */
@@ -65,6 +69,7 @@ public class Simplex {
     public Simplex(double[] c, double[][] a, double[] b) {
         this.m = a.length;
         this.n = a[0].length;
+        this.n2 = n;
 
         // check length
         if (m != b.length) {
@@ -76,17 +81,15 @@ public class Simplex {
 
         this.x = new double[n];
         this.base = new int[m];
-        this.table = new double[m + 1][n + 1];
+        this.table = new double[m + 1][];
+        final int maxCols = n + 1 + m; // m aVars reserved
 
         // table[0]
-        for (int j = 0; j < n; j++) {
-            this.table[0][j] = c[j];
-        }
+        this.table[0] = Arrays.copyOf(c, maxCols);
+
         // table[1..m+1]
         for (int i = 1; i <= m; i++) { // for each row
-            for (int j = 0; j < n; j++) {
-                this.table[i][j] = a[i - 1][j];
-            }
+            this.table[i] = Arrays.copyOf(a[i - 1], maxCols);
             this.table[i][n] = b[i - 1];
         }
     }
@@ -99,20 +102,12 @@ public class Simplex {
         this.preprocess();
         LOG.debug("preprocess", this);
 
-        if (this.initBase()) {
-            LOG.debug("success to init base");
-            this.gaussian();
-            LOG.debug(this);
+        this.initBase();
+        LOG.debug("success to init base");
+        LOG.debug(this);
 
-            while (!this.pivot()) ;
-            this.setXnMax();
-            if (State.SOLVING == this.state) {
-                this.state = State.SOLVED;
-            }
-        } else {
-            LOG.debug("fail to init base");
-            this.state = State.NO_SOLUTION;
-        }
+        while (!this.pivot()) ;
+        this.setXnMax();
 
         LOG.debug(this);
     }
@@ -125,8 +120,19 @@ public class Simplex {
         this.max = Maths.round(-table[0][n], precision);
 
         for (int i = 0; i < m; i++) {
+            double b = Maths.round(table[i + 1][n], precision); // b
             int j = base[i];
-            this.x[j] = Maths.round(table[i + 1][n], precision); // b
+            if (j > n) { // aVar
+                if (State.UNBOUNDED == this.state) {
+                    this.state = State.NO_SOLUTION;
+                }
+                return;
+            }
+            this.x[j] = b;
+        }
+
+        if (State.SOLVING == this.state) {
+            this.state = State.SOLVED;
         }
     }
 
@@ -138,16 +144,37 @@ public class Simplex {
         // for each row, except 0-th
         for (int i = 1; i <= m; i++) {
             double b = table[i][n];
-            if (b >= 0d) {
+            if (b > 0d || b == 0d && positiveNum(table[i], n) > 0) {
                 continue;
             }
+            // b < 0d || no positive number in this row
             for (int j = 0; j <= n; j++) {
                 table[i][j] *= -1;
             }
         }
     }
 
-    private boolean initBase() {
+    private int positiveNum(double[] data, int endIndex) {
+        int count = 0;
+        for (int i = 0; i < endIndex; i++) {
+            if (data[i] > 0) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Artificial variables
+     */
+    private List<Integer> aVars = new ArrayList<>();
+
+    /**
+     * The number of artificial variables
+     */
+    private int nAvars = 0;
+
+    private void initBase() {
         int[] vars = arr0to(n);
         int count = 0;
         for (int j = n - 1; j >= 0 && count < m; j--) {
@@ -155,29 +182,45 @@ public class Simplex {
             if (w > -1 && base[w] < 0) {
                 base[w] = j; // j is selected
                 vars[j] = -1; // mark selected
+                gaussian(w + 1, j);
                 count++;
             }
         }
 
         if (count < m) {
-            for (int i = 0; i < m; i++) {
-                if (base[i] < 0) {
-                    int k = nextVar(vars, i + 1);
-                    if (k < 0) { // -1
-                        return false;
-                    }
-                    base[i] = k;
-                    count++;
+            for (int j = 0; j < n; j++) {
+                if (vars[j] < 0) { // j selected
+                    continue;
                 }
+                int r = indexOfMinRatio(j);
+                if (r < 0 || base[r - 1] >= 0) {
+                    continue;
+                }
+                LOG.debug("base", 'r', r, "var", j);
+                base[r - 1] = j;
+                // vars[j] = -1; // mark selected
+                gaussian(r, j);
+                count++;
             }
         }
 
-        return count == m;
+        nAvars = m - count;
+        addAvars();
     }
 
-    private void gaussian() {
-        for (int i = 1; i <= m; i++) {
-            gaussian(i, base[i - 1]);
+    private void addAvars() {
+        if (nAvars == 0) {
+            return;
+        }
+        n2 = n;
+        for (int i = 0; i < m; i++) {
+            if (base[i] >= 0) {
+                continue;
+            }
+            ++n2;
+            LOG.debug("base", 'i', i, "aVar", n2);
+            base[i] = n2;
+            table[i + 1][n2] = 1;
         }
     }
 
@@ -200,7 +243,7 @@ public class Simplex {
             }
 
             // for each element in this row
-            for (int j = 0; j <= n; j++) {
+            for (int j = 0; j <= n2; j++) {
                 table[i][j] += -v * table[r][j];
             }
         }
@@ -212,28 +255,9 @@ public class Simplex {
             return;
         }
 
-        for (int j = 0; j <= n; j++) {
+        for (int j = 0; j <= n2; j++) {
             table[r][j] /= v;
         }
-    }
-
-    private int nextVar(int[] vars, int r) {
-        double maxc = 0d;
-        int k = -1; // not found
-        for (int j = 0; j < vars.length; j++) {
-            if (vars[j] < 0 || table[r][j] <= 0d) {
-                continue;
-            }
-            final double c = table[0][j];
-            if (-1 == k || maxc < c) {
-                maxc = c;
-                k = vars[j];
-            }
-        }
-        if (k >= 0) {
-            vars[k] = -1; // mark selected
-        }
-        return k;
     }
 
     private static int[] arr0to(int k) {
@@ -265,7 +289,7 @@ public class Simplex {
         final double maxc = table[0][w];
         LOG.debug("iter=" + iterations, "e=" + w, "maxc=" + Maths.round(maxc, precision));
         if (maxc <= 0) {
-            return true;
+            return this.driveAvars();
         }
 
         this.iterations++;
@@ -275,21 +299,49 @@ public class Simplex {
         // not found, i.e. each of table[][w] <=0, unbounded
         if (-1 == r) {
             this.state = State.UNBOUNDED;
-            return true;
+            return this.driveAvars();
         }
-        base[r - 1] = w;
-
-        gaussian(r, w);
+        pivot(r, w);
         LOG.debug(this);
 
         return false;
     }
 
+    private void pivot(int r, int c) {
+        gaussian(r, c);
+        base[r - 1] = c;
+    }
+
+    /**
+     * Return {@code true} if STOP
+     */
+    private boolean driveAvars() {
+        this.n2 = n; // discard aVars
+        boolean b = true;
+        for (int r = 1; r <= m; r++) {
+            if (base[r - 1] < n) { // non-aVar
+                continue;
+            }
+            for (int j = 0; j < n; j++) {
+                if (table[r][j] <= 0d) {
+                    continue;
+                }
+                LOG.debug("driving aVar", base[r - 1]);
+                b = false;
+                pivot(r, j);
+                break;
+            }
+        }
+        return b;
+    }
 
     private int indexOfMaxc() {
         double maxc = table[0][0];
         int w = 0;
-        for (int j = 1; j < n; j++) {
+        for (int j = 1; j < n2; j++) {
+            if (n == j) { // b column
+                continue;
+            }
             if (maxc < table[0][j]) {
                 maxc = table[0][j];
                 w = j;
@@ -349,6 +401,7 @@ public class Simplex {
         b.append("max=").append(max);
         b.append('\n').append(" iter=").append(iterations);
         b.append(" base=").append(Arrays.toString(base));
+        b.append(" nAvars=").append(nAvars);
         b.append(" state=").append(state);
         b.append('\n').append(" x=").append(Arrays.toString(x));
 
@@ -364,10 +417,10 @@ public class Simplex {
                 for (int j = 0; j < n; j++) {
                     b.append(" -----    ");
                 }
-                b.append(" + -----\n  ");
+                b.append(" +  -----\n  ");
             }
             // print table[i]
-            for (int j = 0; j <= n; j++) {
+            for (int j = 0; j <= n2; j++) {
                 if (n == j) {
                     b.append(" | ");
                 }
