@@ -1,7 +1,6 @@
 package com.github.cloudecho.bnb;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * General linear program.
@@ -33,7 +32,7 @@ public class GeneralLP implements Solver {
     protected final double[][] a;
     protected final Sign[] signs;
     protected final double[] b;
-    protected final List<Integer> freeVars;
+    protected final int[] freeVars;
 
     // for standard LP
     private int n2;
@@ -120,8 +119,8 @@ public class GeneralLP implements Solver {
         // X
         this.x2 = simplex.getX();
         System.arraycopy(x2, 0, this.x, 0, n);
-        for (int i = 0; i < freeVars.size(); i++) {
-            int k = freeVars.get(i); // for x_k
+        for (int i = 0; i < freeVars.length; i++) {
+            int k = freeVars[i]; // for x_k
             this.x[k - 1] -= x2[n + i];
         }
     }
@@ -135,7 +134,7 @@ public class GeneralLP implements Solver {
     }
 
     private void computeN2() {
-        this.n2 = n + freeVars.size();
+        this.n2 = n + freeVars.length;
         for (Sign sign : this.signs) {
             if (sign == null) {
                 throw new IllegalArgumentException("null sign");
@@ -163,8 +162,8 @@ public class GeneralLP implements Solver {
         }
 
         // for free vars
-        for (int j = 0; j < freeVars.size(); j++) {
-            int k = freeVars.get(j); // free var: x_k
+        for (int j = 0; j < freeVars.length; j++) {
+            int k = freeVars[j]; // free var: x_k
             // check range
             if (k < 1 || k > n) {
                 throw new IllegalArgumentException("free var out of range: " + k);
@@ -177,7 +176,7 @@ public class GeneralLP implements Solver {
         }
 
         // for slack/surplus vars
-        for (int i = 0, j = n + freeVars.size(); i < m; i++) {
+        for (int i = 0, j = n + freeVars.length; i < m; i++) {
             Sign sign = signs[i];
             if (Sign.LE == sign) { // slack
                 this.a2[i][j] = 1;
@@ -241,20 +240,21 @@ public class GeneralLP implements Solver {
         b.append(" {");
         b.append("m=").append(m).append(' ');
         b.append("n=").append(n).append(' ');
-        b.append(objectiveType).append("=").append(objective);
+        b.append(objectiveType).append("=").append(Maths.round(objective, precision));
         b.append('\n').append(" iter=").append(iterations);
         b.append(" state=").append(state);
         b.append("\n n2=").append(n2);
         b.append(" x2=").append(Arrays.toString(x2));
-        b.append("\n freeVars=").append(freeVars);
+        b.append("\n freeVars=").append(Arrays.toString(freeVars));
         this.toStringExtra(b);
+
         b.append('\n').append(" x=").append(Arrays.toString(x));
         b.append(" c0=").append(c0);
 
         // print c
         b.append('\n').append(" [");
         for (int j = 0; j < n; j++) {
-            b.append(freeVars.contains(j + 1) ? '*' : ' ');
+            b.append(Maths.contains(freeVars, j + 1) ? '*' : ' ');
             b.append(String.format("%-8.3f", c[j])).append(' ');
         }
         b.append(" =  ").append(objectiveType).append("-c0\n  ");

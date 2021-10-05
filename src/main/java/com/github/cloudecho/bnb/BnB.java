@@ -1,9 +1,10 @@
 package com.github.cloudecho.bnb;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 /**
- * Branch and bound for mixed-integer programming.
+ * Branch-and-bound for mixed-integer programming.
  * <pre>
  * max (or min) z = c0 + CX
  * s.t. Ai*X <= (or >=, =) b_i , i = 1,...,m
@@ -18,13 +19,12 @@ import java.util.List;
  * b = (b1 ... b_m)'
  * </pre>
  *
- * @see <a href="https://web.mit.edu/15.053/www/AMP-Chapter-09.pdf">
- * Integer Programming</a>
+ * @see <a href="https://web.mit.edu/15.053/www/AMP-Chapter-09.pdf">Integer Programming</a>
  */
 public class BnB extends GeneralLP implements Solver {
     static final Log LOG = LogFactory.getLog(BnB.class);
 
-    private final List<Integer> intVars;
+    private final int[] intVars;
 
     /**
      * Constructor. All variables are default to be non-negative.
@@ -47,8 +47,146 @@ public class BnB extends GeneralLP implements Solver {
         LOG.debug("intVars", intVars);
     }
 
+    static class Node {
+        static final char ROOT = '0';
+        static final char LEFT = 'L';
+        static final char RIGHT = 'R';
+
+        final GeneralLP lp;
+        final int level;// starts from 0
+        final char branch;
+        final Node parent;
+
+        public Node(GeneralLP lp, Node parent, char branch) {
+            this.lp = lp;
+            this.parent = parent;
+            this.branch = branch;
+            this.level = (parent == null) ? 0 : parent.level + 1;
+        }
+
+        @Override
+        public String toString() {
+            return (parent == null ? "" : parent + "-") + level + branch;
+        }
+    }
+
+    /**
+     * The problem tree
+     */
+    private LinkedList<Node> nodes = new LinkedList<>();
+
+    @Override
+    public void solve() {
+        this.objective = objectiveType.isMax() ? -Double.MAX_VALUE : Double.MAX_VALUE;
+        this.iterations = 0;
+        LOG.debug(this);
+        this.state = State.SOLVING;
+
+        // create root node
+        GeneralLP lp0 = new GeneralLP(objectiveType, c0, c, a, signs, b, freeVars);
+        nodes.add(new Node(lp0, null, Node.ROOT));
+
+        while (!nodes.isEmpty()) {
+            this.iterations++;
+            solve(nodes.removeLast());
+        }
+
+        if (State.SOLVING == this.state) {
+            this.state = State.NO_SOLUTION;
+        }
+
+        LOG.debug(this);
+    }
+
+    private void solve(Node node) {
+        node.lp.solve();
+        LOG.debug(node, node.lp.state);
+
+        // if the LP relaxation unbounded
+        if (State.UNBOUNDED == node.lp.state) {
+            if (State.ZERO == this.state) {
+                this.state = State.UNBOUNDED;
+            }
+            LOG.debug(node, "prune", node.lp.state);
+            return;
+        }
+
+        // if the LP relaxation not solved
+        if (!node.lp.state.isSolved()) {
+            LOG.debug(node, "prune", node.lp.state);
+            return;
+        }
+
+        // case 1
+        if (this.betterOrEq(node.lp.objective)) {
+            LOG.debug(node, "prune", "worse", node.lp.objective);
+            return;
+        }
+
+        // case 2
+        if (isFeasible(node.lp.x)) {
+            this.state = State.SOLVED;
+            this.objective = node.lp.objective; // incumbent
+            System.arraycopy(node.lp.x, 0, this.x, 0, n);
+            LOG.debug(node, "prune", "incumbent", this.objective);
+            return;
+        }
+
+        // case 3: node.lp.x not feasible
+        if (!isLeaf(node)) {
+            branch(node);
+        }
+    }
+
+    private boolean betterOrEq(double z) {
+        if (objectiveType.isMax()) {
+            return objective >= z;
+        } else {
+            return objective <= z;
+        }
+    }
+
+    private void branch(Node parent) {
+        final GeneralLP lp0 = parent.lp;
+        final int v = intVars[parent.level];
+        Maths.CnF cf = new Maths.CnF(lp0.x[v - 1]);
+
+        // add a constraint to parent.A
+        final double[] constraint = new double[n];
+        constraint[v - 1] = 1;
+        final double[][] a2 = Maths.append(lp0.a, constraint);
+
+        // LP1: left branch (<= floor)
+        LOG.debug(parent, "left branch x(", v, ") <=", cf.floor);
+        Sign[] signs1 = Maths.append(lp0.signs, Sign.LE);
+        double[] b1 = Maths.append(lp0.b, cf.floor);
+        GeneralLP lp1 = new GeneralLP(lp0.objectiveType, lp0.c0, lp0.c, a2, signs1, b1, lp0.freeVars);
+
+        // LP2: right branch (>= ceil)
+        LOG.debug(parent, "right branch x(", v, ") >=", cf.ceil);
+        Sign[] signs2 = Maths.append(lp0.signs, Sign.GE);
+        double[] b2 = Maths.append(lp0.b, cf.ceil);
+        GeneralLP lp2 = new GeneralLP(lp0.objectiveType, lp0.c0, lp0.c, a2, signs2, b2, lp0.freeVars);
+
+        nodes.addLast(new Node(lp1, parent, Node.LEFT));
+        nodes.addLast(new Node(lp2, parent, Node.RIGHT));
+    }
+
+    private boolean isLeaf(Node node) {
+        return node.level == (intVars.length - 1);
+    }
+
+    private boolean isFeasible(double[] x) {
+        for (int v : intVars) {
+            if (!new Maths.CnF(x[v - 1]).eq()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     protected void toStringExtra(StringBuilder b) {
-        b.append("\n intVars=").append(intVars);
+        b.append("\n intVars=").append(Arrays.toString(intVars));
     }
 }
