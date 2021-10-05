@@ -1,6 +1,7 @@
 package com.github.cloudecho.bnb;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * General linear program.
@@ -20,41 +21,40 @@ import java.util.*;
  * @see <a href="https://math.mit.edu/~goemans/18310S15/lpnotes310.pdf">
  * The lecture notes of Linear Programming by Michel Goemans</a>
  */
-public class GeneralLP implements LPSolver {
+public class GeneralLP implements Solver {
     static final Log LOG = LogFactory.getLog(GeneralLP.class);
 
-    private final int m;
-    private final int n;
+    protected final int m;
+    protected final int n;
 
-    private final ObjectiveType objectiveType;
-    private final double c0;
-    private final double[] c;
-    private final double[][] a;
-    private final Sign[] signs;
-    private final double[] b;
-    private final List<Integer> freeVars;
+    protected final ObjectiveType objectiveType;
+    protected final double c0;
+    protected final double[] c;
+    protected final double[][] a;
+    protected final Sign[] signs;
+    protected final double[] b;
+    protected final List<Integer> freeVars;
 
     // for standard LP
     private int n2;
     private double[] c2;
     private double[][] a2;
+    private double[] x2 = new double[0];
 
     /**
      * Objective value
      */
-    private double objective = 0d;
+    protected double objective = 0d;
 
     /**
      * The vector X
      */
-    private final double[] x;
+    protected final double[] x;
 
-    private double[] x2 = new double[0];
-
-    private int precision = DEFAULT_PRECISION;
+    protected int precision = DEFAULT_PRECISION;
 
     /**
-     * Constructor.
+     * Constructor. All variables are default to be non-negative.
      *
      * @param objectiveType The objective type (max or min)
      * @param c0            c0
@@ -87,27 +87,14 @@ public class GeneralLP implements LPSolver {
         this.a = a;
         this.signs = signs;
         this.b = b;
-        this.freeVars = unique(freeVars);
+        this.freeVars = Maths.unique(freeVars);
         LOG.debug("free vars", this.freeVars);
 
         this.x = new double[n];
     }
 
-    private List<Integer> unique(int[] vars) {
-        if (vars == null) {
-            return Collections.EMPTY_LIST;
-        }
-
-        Set<Integer> s = new HashSet<>();
-        for (int v : vars) {
-            s.add(v);
-        }
-
-        return new ArrayList<>(s);
-    }
-
-    private int iterations = 0;
-    private State state = State.ZERO;
+    protected int iterations = 0;
+    protected State state = State.ZERO;
 
     @Override
     public void solve() {
@@ -245,9 +232,13 @@ public class GeneralLP implements LPSolver {
         return precision;
     }
 
+    protected void toStringExtra(StringBuilder b) {
+    }
+
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder("GeneralLP {");
+        StringBuilder b = new StringBuilder(getClass().getSimpleName());
+        b.append(" {");
         b.append("m=").append(m).append(' ');
         b.append("n=").append(n).append(' ');
         b.append(objectiveType).append("=").append(objective);
@@ -255,8 +246,9 @@ public class GeneralLP implements LPSolver {
         b.append(" state=").append(state);
         b.append("\n n2=").append(n2);
         b.append(" x2=").append(Arrays.toString(x2));
+        b.append("\n freeVars=").append(freeVars);
+        this.toStringExtra(b);
         b.append('\n').append(" x=").append(Arrays.toString(x));
-        b.append(" freeVars=").append(freeVars);
         b.append(" c0=").append(c0);
 
         // print c

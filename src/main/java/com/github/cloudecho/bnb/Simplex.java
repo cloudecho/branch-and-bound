@@ -1,8 +1,6 @@
 package com.github.cloudecho.bnb;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Primal Simplex.
@@ -36,7 +34,7 @@ import java.util.List;
  * @see <a href="https://math.mit.edu/~goemans/18310S15/lpnotes310.pdf">
  * The lecture notes of Linear Programming by Michel Goemans</a>
  */
-public class Simplex implements LPSolver {
+public class Simplex implements Solver {
     static final Log LOG = LogFactory.getLog(Simplex.class);
 
     private final int m;
@@ -164,11 +162,6 @@ public class Simplex implements LPSolver {
         }
         return count;
     }
-
-    /**
-     * Artificial variables
-     */
-    private List<Integer> aVars = new ArrayList<>();
 
     /**
      * The number of artificial variables

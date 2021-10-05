@@ -1,6 +1,6 @@
 package com.github.cloudecho.bnb;
 
-public interface LPSolver {
+public interface Solver {
     int DEFAULT_PRECISION = 7;
 
     void solve();
