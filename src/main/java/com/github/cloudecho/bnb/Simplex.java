@@ -124,7 +124,7 @@ public class Simplex implements Solver {
         for (int i = 0; i < m; i++) {
             double b = Maths.round(table[i + 1][n], precision); // b
             int j = base[i];
-            if (j > n) { // aVar
+            if (j > n || b < 0) { // aVar || not feasible
                 this.state = State.NO_SOLUTION;
                 return;
             }
@@ -320,6 +320,7 @@ public class Simplex implements Solver {
                 LOG.debug("driving aVar", base[r - 1]);
                 b = false;
                 pivot(r, j);
+                LOG.debug(this);
                 break;
             }
         }
