@@ -25,6 +25,7 @@ public class BnB extends GeneralLP implements Solver {
     static final Log LOG = LogFactory.getLog(BnB.class);
 
     private final int[] intVars;
+    private final int nBinVars;
 
     /**
      * Constructor. All variables are default to be non-negative.
@@ -40,11 +41,61 @@ public class BnB extends GeneralLP implements Solver {
      *                      e.g. {1,2} represents x1,x2 are unrestricted.
      * @param intVars       integer variables, var starts from 1. <br>
      *                      e.g. {3,4} represents x3,x4 are restricted to be non-negative integer.
+     * @param binVars       binary variables, var starts from 1. <br>
+     *                      e.g. {1,2} represents x1,x2 are restricted to be 0 or 1.
+     */
+    public BnB(ObjectiveType objectiveType, double c0, double[] c, double[][] a, Sign[] signs, double[] b, int[] freeVars, int[] intVars, int[] binVars) {
+        super(objectiveType, c0, c, a, signs, b, freeVars);
+        this.intVars = Maths.unique(Maths.union(binVars, intVars));
+        this.nBinVars = Maths.length(Maths.unique(binVars));
+
+        LOG.debug("intVars", this.intVars);
+        LOG.debug("nBinVars", this.nBinVars);
+    }
+
+    /**
+     * Constructor. All variables are default to be non-negative.
+     *
+     * @see #BnB(ObjectiveType, double, double[], double[][], Sign[], double[], int[], int[], int[])
      */
     public BnB(ObjectiveType objectiveType, double c0, double[] c, double[][] a, Sign[] signs, double[] b, int[] freeVars, int[] intVars) {
-        super(objectiveType, c0, c, a, signs, b, freeVars);
-        this.intVars = Maths.unique(intVars);
-        LOG.debug("intVars", intVars);
+        this(objectiveType, c0, c, a, signs, b, freeVars, intVars, Maths.EMPTY_INT_ARRAY);
+    }
+
+    /**
+     * a with binary constraints
+     */
+    private double[][] a2() {
+        double[][] r = a;
+        for (int j = 0; j < nBinVars; j++) {
+            final int v = intVars[j];
+            double[] constraint = new double[n];
+            constraint[v - 1] = 1d;
+            r = Maths.append(r, constraint);
+        }
+        return r;
+    }
+
+    /**
+     * b with binary constraints
+     */
+    private double[] b2() {
+        double[] r = b;
+        for (int j = 0; j < nBinVars; j++) {
+            r = Maths.append(r, 1d);
+        }
+        return r;
+    }
+
+    /**
+     * signs with binary constraints
+     */
+    private Sign[] signs2() {
+        Sign[] r = signs;
+        for (int j = 0; j < nBinVars; j++) {
+            r = Maths.append(r, Sign.LE);
+        }
+        return r;
     }
 
     static class Node {
@@ -77,13 +128,13 @@ public class BnB extends GeneralLP implements Solver {
 
     @Override
     public void solve() {
-        this.objective = objectiveType.isMax() ? -Double.MAX_VALUE : Double.MAX_VALUE;
+        this.objective = objectiveType.isMax() ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
         this.iterations = 0;
         LOG.debug(this);
         this.state = State.SOLVING;
 
         // create root node
-        GeneralLP lp0 = new GeneralLP(objectiveType, c0, c, a, signs, b, freeVars);
+        GeneralLP lp0 = new GeneralLP(objectiveType, c0, c, a2(), signs2(), b2(), freeVars);
         nodes.add(new Node(lp0, null, Node.ROOT));
 
         while (!nodes.isEmpty()) {
@@ -104,9 +155,7 @@ public class BnB extends GeneralLP implements Solver {
 
         // if the LP relaxation unbounded
         if (State.UNBOUNDED == node.lp.state) {
-            if (State.ZERO == this.state) {
-                this.state = State.UNBOUNDED;
-            }
+            this.state = State.UNBOUNDED;
             LOG.debug(node, "prune", node.lp.state);
             return;
         }
@@ -134,7 +183,11 @@ public class BnB extends GeneralLP implements Solver {
 
         // case 3: node.lp.x not feasible
         if (!isLeaf(node)) {
-            branch(node);
+            if (node.level < nBinVars) {
+                branch01(node);
+            } else {
+                branch(node);
+            }
         }
     }
 
@@ -172,6 +225,32 @@ public class BnB extends GeneralLP implements Solver {
         nodes.addLast(new Node(lp2, parent, Node.RIGHT));
     }
 
+    /**
+     * 0-1 branch for binary vars
+     */
+    private void branch01(Node parent) {
+        final GeneralLP lp0 = parent.lp;
+        final int v = intVars[parent.level];
+
+        final Sign[] signs2 = Arrays.copyOf(lp0.signs, lp0.signs.length);
+        signs2[m + parent.level] = Sign.EQ;
+
+        // LP1: left branch (=0)
+        LOG.debug(parent, "left branch x(", v, ") =", 0);
+        final double[] b1 = Arrays.copyOf(lp0.b, lp0.b.length);
+        b1[m + parent.level] = 0d;
+        GeneralLP lp1 = new GeneralLP(lp0.objectiveType, lp0.c0, lp0.c, lp0.a, signs2, b1, lp0.freeVars);
+
+        // LP2: right branch (=1)
+        LOG.debug(parent, "right branch x(", v, ") =", 1);
+        final double[] b2 = Arrays.copyOf(lp0.b, lp0.b.length);
+        b2[m + parent.level] = 1d;
+        GeneralLP lp2 = new GeneralLP(lp0.objectiveType, lp0.c0, lp0.c, lp0.a, signs2, b2, lp0.freeVars);
+
+        nodes.addLast(new Node(lp1, parent, Node.LEFT));
+        nodes.addLast(new Node(lp2, parent, Node.RIGHT));
+    }
+
     private boolean isLeaf(Node node) {
         return node.level == (intVars.length - 1);
     }
@@ -188,5 +267,6 @@ public class BnB extends GeneralLP implements Solver {
     @Override
     protected void toStringExtra(StringBuilder b) {
         b.append("\n intVars=").append(Arrays.toString(intVars));
+        b.append(" nBinVars=").append(nBinVars);
     }
 }

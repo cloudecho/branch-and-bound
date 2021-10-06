@@ -106,6 +106,9 @@ public class Simplex implements Solver {
 
         while (!this.pivot()) ;
         this.setXnMax();
+        if (State.SOLVING == this.state) {
+            this.state = State.SOLVED;
+        }
 
         LOG.debug(this);
     }
@@ -122,16 +125,10 @@ public class Simplex implements Solver {
             double b = Maths.round(table[i + 1][n], precision); // b
             int j = base[i];
             if (j > n) { // aVar
-                if (State.UNBOUNDED == this.state) {
-                    this.state = State.NO_SOLUTION;
-                }
+                this.state = State.NO_SOLUTION;
                 return;
             }
             this.x[j] = b;
-        }
-
-        if (State.SOLVING == this.state) {
-            this.state = State.SOLVED;
         }
     }
 

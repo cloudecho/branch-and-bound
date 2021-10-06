@@ -8,6 +8,7 @@ import java.util.logging.Level;
 public class BnBTest {
     static {
         BnB.LOG.setLevel(Level.ALL);
+        //GeneralLP.LOG.setLevel(Level.ALL);
     }
 
     @Test
@@ -35,24 +36,28 @@ public class BnBTest {
 
     @Test
     public void testSolve2() {
-        double[] c = {5, 7};
+        double[] c = {-8, -2, -4, -7, -5};
         double[][] a = {
-                {1, 1},
-                {4, 9}
+                {-3, -3, 1, 2, 3},
+                {-5, -3, -2, -1, 1}
         };
         Sign[] signs = {Sign.LE, Sign.LE};
-        double[] b = {11, 61};
+        double[] b = {-2, -4};
         int[] freeVars = null;
-        int[] intVars = {1, 2};
+        int[] intVars = null;
+        int[] binVars = new int[]{1, 2, 3, 4, 5};
 
-        BnB bnb = new BnB(ObjectiveType.max, 4, c, a, signs, b, freeVars, intVars);
+        BnB bnb = new BnB(ObjectiveType.max, 10, c, a, signs, b, freeVars, intVars, binVars);
         bnb.solve();
 
         double[] x = bnb.getX();
         Assert.assertEquals("state", State.SOLVED, bnb.getState());
         Assert.assertEquals("objectiveType", ObjectiveType.max, bnb.getObjectiveType());
-        Assert.assertEquals("objective", 650, (int) (10 * bnb.getObjective()));
-        Assert.assertEquals("x[0]", 80, (int) (10 * x[0]));
-        Assert.assertEquals("x[1]", 30, (int) (10 * x[1]));
+        Assert.assertEquals("objective", 40, (int) (10 * bnb.getObjective()));
+        Assert.assertEquals("x[0]", 0, (int) (10 * x[0]));
+        Assert.assertEquals("x[1]", 10, (int) (10 * x[1]));
+        Assert.assertEquals("x[2]", 10, (int) (10 * x[2]));
+        Assert.assertEquals("x[3]", 0, (int) (10 * x[3]));
+        Assert.assertEquals("x[4]", 0, (int) (10 * x[4]));
     }
 }

@@ -17,7 +17,7 @@ public class Maths {
     static final int[] EMPTY_INT_ARRAY = new int[0];
 
     public static int[] unique(int[] vars) {
-        if (vars == null || 0 == vars.length) {
+        if (0 == length(vars)) {
             return EMPTY_INT_ARRAY;
         }
 
@@ -32,6 +32,31 @@ public class Maths {
 
         // to int array
         return s.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    public static int[] union(int[] a1, int[] a2) {
+        if (0 == length(a1) && 0 == length(a2)) {
+            return EMPTY_INT_ARRAY;
+        }
+
+        if (0 == length(a1)) {
+            return a2;
+        }
+
+        if (0 == length(a2)) {
+            return a1;
+        }
+
+        int[] r = Arrays.copyOf(a1, a1.length + a2.length);
+        System.arraycopy(a2, 0, r, a1.length, a2.length);
+        return r;
+    }
+
+    public static int length(int[] a) {
+        if (a == null) {
+            return 0;
+        }
+        return a.length;
     }
 
     public static boolean contains(int[] arr, final int i) {
