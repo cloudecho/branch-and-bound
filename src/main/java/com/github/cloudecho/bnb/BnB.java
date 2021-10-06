@@ -124,7 +124,7 @@ public class BnB extends GeneralLP implements Solver {
     /**
      * The problem tree
      */
-    private LinkedList<Node> nodes = new LinkedList<>();
+    private final LinkedList<Node> nodes = new LinkedList<>();
 
     @Override
     public void solve() {
@@ -252,7 +252,7 @@ public class BnB extends GeneralLP implements Solver {
     }
 
     private boolean isLeaf(Node node) {
-        return node.level == (intVars.length - 1);
+        return node.level == intVars.length;
     }
 
     private boolean isFeasible(double[] x) {
