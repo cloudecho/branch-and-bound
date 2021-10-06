@@ -150,6 +150,7 @@ public class BnB extends GeneralLP implements Solver {
     }
 
     private void solve(Node node) {
+        node.lp.setPrecision(this.precision);
         node.lp.solve();
         LOG.debug(node, node.lp.state);
 
