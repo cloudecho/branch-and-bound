@@ -126,9 +126,10 @@ public class Simplex implements Solver {
             int j = base[i];
             if (j > n || b < 0) { // aVar || not feasible
                 this.state = State.NO_SOLUTION;
-                return;
             }
-            this.x[j] = b;
+            if (j < n) {
+                this.x[j] = b;
+            }
         }
     }
 
@@ -307,7 +308,6 @@ public class Simplex implements Solver {
      * Return {@code true} if STOP
      */
     private boolean driveAvars() {
-        this.n2 = n; // discard aVars
         boolean b = true;
         for (int r = 1; r <= m; r++) {
             if (base[r - 1] < n) { // non-aVar
@@ -324,6 +324,7 @@ public class Simplex implements Solver {
                 break;
             }
         }
+        this.n2 = n; // discard aVars
         return b;
     }
 

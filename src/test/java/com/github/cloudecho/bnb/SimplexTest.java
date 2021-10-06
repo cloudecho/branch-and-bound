@@ -101,4 +101,21 @@ public class SimplexTest {
         Assert.assertEquals("max", 0, (int) simplex.getMax());
     }
 
+    @Test
+    public void testSolveDrivingAvars() {
+        double[] c = {5, 4, 6, 0, 0, 0, 0};
+        double[][] a = {
+                {1, 1, 1, 1, 0, 0, 0},
+                {1, -0.5, 0, 0, 1, 0, 0},
+                {3, 0, 1, 0, 0, 1, 0},
+                {0, -2, -3, 0, 0, 0, 1},
+        };
+        double[] b = {60, -32, -43, 86};
+
+        Simplex simplex = new Simplex(c, a, b);
+        simplex.solve();
+
+        Assert.assertEquals("state", State.NO_SOLUTION, simplex.getState());
+    }
+
 }
