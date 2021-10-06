@@ -86,4 +86,23 @@ public class BnBTest {
         Assert.assertEquals("x[2]", 20, (int) (10 * x[2]));
         Assert.assertEquals("x[3]", 5, (int) (10 * x[3]));
     }
+
+    @Test
+    public void testSolveMixedNoSolution() {
+        double[] c = {3, 2, 0, 0};
+        double[][] a = {
+                {1, -2, 1, 0},
+                {2, 1, 0, 1}
+        };
+        Sign[] signs = {Sign.EQ, Sign.EQ};
+        double[] b = {2.5, 1.5};
+        int[] freeVars = null;
+        int[] intVars = {2, 3};
+        int[] binVars = {3};
+
+        BnB bnb = new BnB(ObjectiveType.min, 4, c, a, signs, b, freeVars, intVars, binVars);
+        bnb.solve();
+
+        Assert.assertEquals("state", State.NO_SOLUTION, bnb.getState());
+    }
 }
