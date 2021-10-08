@@ -290,7 +290,7 @@ public class Model {
                 }
 
                 // else: n.target not empty
-                bVector.add(Double.valueOf(n.target));
+                bVector.add(Expr.valueOf(n.target).coef);
                 signs.add(n.sign);
                 // the matrix A
                 Map<String, Double> a = new HashMap<>();
