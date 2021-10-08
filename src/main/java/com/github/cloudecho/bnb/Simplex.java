@@ -105,12 +105,33 @@ public class Simplex implements Solver {
         LOG.debug(this);
 
         while (!this.pivot()) ;
+        this.pivotOnNegative();
         this.setXnMax();
         if (State.SOLVING == this.state) {
             this.state = State.SOLVED;
         }
 
         LOG.debug(this);
+    }
+
+    private void pivotOnNegative() {
+        if (State.SOLVING != this.state) {
+            return;
+        }
+        for (int i = 1; i < m; i++) {
+            if (table[i][n] >= 0) {
+                continue;
+            }
+            for (int j = 0; j < n; j++) {
+                if (table[i][j] < 0d && table[0][j] == 0d && !Maths.contains(base, j)) {
+                    // pivot on negative number
+                    LOG.debug("pivot (", i, j, ") on negative", table[i][j]);
+                    pivot(i, j);
+                    LOG.debug(this);
+                    break;
+                }
+            }
+        }
     }
 
     @Override
@@ -314,7 +335,7 @@ public class Simplex implements Solver {
                 continue;
             }
             for (int j = 0; j < n; j++) {
-                if (table[r][j] <= 0d) {
+                if (0d == table[r][j] || (table[r][j] < 0d && table[r][n] > 0d)) {
                     continue;
                 }
                 LOG.debug("driving aVar", base[r - 1]);

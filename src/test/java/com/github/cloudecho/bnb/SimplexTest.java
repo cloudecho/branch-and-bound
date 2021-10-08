@@ -118,4 +118,50 @@ public class SimplexTest {
         Assert.assertEquals("state", State.NO_SOLUTION, simplex.getState());
     }
 
+    @Test
+    public void testSolveDrivingAvars2() {
+        double[] c = {1, 1, 0, 0};
+        double[][] a = {
+                {1, 1, 0, 0},
+                {1, 0, 1, 0,},
+                {0, 1, 0, 1}
+        };
+        double[] b = {2, 1, 1};
+
+        Simplex simplex = new Simplex(c, a, b);
+        simplex.solve();
+
+        double[] x = simplex.getX();
+        Assert.assertEquals("state", State.SOLVED, simplex.getState());
+        Assert.assertEquals("max", 2, (int) simplex.getMax());
+        Assert.assertEquals("x[0]", 1, (int) x[0]);
+        Assert.assertEquals("x[1]", 1, (int) x[1]);
+        Assert.assertEquals("x[2]", 0, (int) x[2]);
+        Assert.assertEquals("x[3]", 0, (int) x[3]);
+    }
+
+    @Test
+    public void testSolvePivotOnNegative() {
+        double[] c = {1, 0, 0, 0, 0, 0};
+        double[][] a = {
+                {1, 1, 1, 0, 0, 0},
+                {1, 0, 0, 1, 0, 0},
+                {0, 1, 0, 0, 1, 0},
+                {0, 0, 1, 0, 0, 1}
+        };
+        double[] b = {3, 1, 1, 1};
+
+        Simplex simplex = new Simplex(c, a, b);
+        simplex.solve();
+
+        double[] x = simplex.getX();
+        Assert.assertEquals("state", State.SOLVED, simplex.getState());
+        Assert.assertEquals("max", 1, (int) simplex.getMax());
+        Assert.assertEquals("x[0]", 1, (int) x[0]);
+        Assert.assertEquals("x[1]", 1, (int) x[1]);
+        Assert.assertEquals("x[2]", 1, (int) x[2]);
+        Assert.assertEquals("x[3]", 0, (int) x[3]);
+        Assert.assertEquals("x[4]", 0, (int) x[4]);
+        Assert.assertEquals("x[5]", 0, (int) x[5]);
+    }
 }
