@@ -6,7 +6,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class Log {
+public class Log {
     private static final Handler CONSOLE_HANDLER = new ConsoleHandler();
     private final Logger logger;
 
@@ -20,32 +20,31 @@ class Log {
         this.logger.addHandler(CONSOLE_HANDLER);
     }
 
-    void debug(Object... msg) {
+    public void debug(Object... msg) {
         if (isDebugEnabled()) {
             logger.fine(toString(msg));
         }
     }
 
-    void info(Object... msg) {
+    public void info(Object... msg) {
         if (isInfoEnabled()) {
             logger.info(toString(msg));
         }
     }
 
-
-    void warn(Object... msg) {
+    public void warn(Object... msg) {
         if (isWarnEnabled()) {
             logger.warning(toString(msg));
         }
     }
 
-    void error(Object... msg) {
+    public void error(Object... msg) {
         if (isErrorEnabled()) {
             logger.severe(toString(msg));
         }
     }
 
-    boolean isDebugEnabled() {
+    public boolean isDebugEnabled() {
         return logger.isLoggable(Level.FINE);
     }
 
@@ -61,7 +60,7 @@ class Log {
         return logger.isLoggable(Level.SEVERE);
     }
 
-    void setLevel(Level level) {
+    public void setLevel(Level level) {
         logger.setLevel(level);
     }
 

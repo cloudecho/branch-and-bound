@@ -15,6 +15,7 @@ public class Maths {
     }
 
     static final int[] EMPTY_INT_ARRAY = new int[0];
+    static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
 
     public static int[] unique(int[] vars) {
         if (0 == length(vars)) {
@@ -31,7 +32,7 @@ public class Maths {
         }
 
         // to int array
-        return s.stream().mapToInt(Integer::intValue).toArray();
+        return toIntArray(s);
     }
 
     public static int[] union(int[] a1, int[] a2) {
@@ -108,5 +109,19 @@ public class Maths {
         Sign[] r = Arrays.copyOf(signs, signs.length + 1);
         r[signs.length] = s;
         return r;
+    }
+
+    public static int[] toIntArray(List<Integer> list) {
+        if (null == list || list.isEmpty()) {
+            return EMPTY_INT_ARRAY;
+        }
+        return list.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    public static double[] toDoubleArray(List<Double> list) {
+        if (null == list || list.isEmpty()) {
+            return EMPTY_DOUBLE_ARRAY;
+        }
+        return list.stream().mapToDouble(Double::doubleValue).toArray();
     }
 }

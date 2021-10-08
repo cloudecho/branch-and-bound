@@ -29,4 +29,16 @@ public enum Sign {
     public boolean isEquality() {
         return EQ.equals(this);
     }
+
+    public static Sign of(char ch) {
+        if ('<' == ch) {
+            return LE;
+        } else if ('>' == ch) {
+            return GE;
+        } else if ('=' == ch) {
+            return EQ;
+        } else {
+            throw new IllegalArgumentException("unknown sign '" + ch + "'");
+        }
+    }
 }
