@@ -239,11 +239,12 @@ public class Model {
                     throw new RuntimeException("unknown character '" + ch + "'");
                 }
             }
+            emit(start, text.length());
+            endMark();
             return complete();
         }
 
         private Model complete() {
-            endMark();
             LOG.debug(root);
 
             Model m = new Model();
@@ -426,8 +427,8 @@ public class Model {
         }
 
         private void endMark() {
-            mark = END;
             endExpr();
+            mark = END;
         }
 
         private void endExpr() {
