@@ -64,6 +64,10 @@ public class Log {
         logger.setLevel(level);
     }
 
+    public void addHandler(Handler handler){
+        logger.addHandler(handler);
+    }
+
     private String toString(Object... msg) {
         StringBuilder b = new StringBuilder(Thread.currentThread().getName());
         for (Object m : msg) {

@@ -14,6 +14,7 @@ public class Gui extends JFrame {
     JButton btnSolve = new JButton("SOLVE");
     JButton btnClear = new JButton("CLEAR OUT");
     JToggleButton btnHide = new JToggleButton("HIDE INPUT");
+    JToggleButton btnSimplexLog = new JToggleButton("SIMPLEX LOG");
     JTextArea editor = new JTextArea(12, 70);
     JTextArea info = new JTextArea(24, 70);
     final JSplitPane splitPane;
@@ -24,12 +25,14 @@ public class Gui extends JFrame {
         btnSolve.setFont(BUTTON_FONT);
         btnClear.setFont(BUTTON_FONT);
         btnHide.setFont(BUTTON_FONT);
+        btnSimplexLog.setFont(BUTTON_FONT);
 
         // north
         Box north = Box.createHorizontalBox();
         north.add(btnHide);
         north.add(btnClear);
         north.add(Box.createGlue());
+        north.add(btnSimplexLog);
         north.add(btnSolve);
 
         // splitPane/top
@@ -54,34 +57,40 @@ public class Gui extends JFrame {
         addListeners();
     }
 
-    static {
-        BnB.LOG.setLevel(Level.ALL);
-    }
-
     private void addListeners() {
-        btnHide.addActionListener((actionEvent) -> {
-            splitPane.setDividerLocation(btnHide.isSelected() ? 0 : splitPane.getLastDividerLocation());
-        });
+        btnHide.addActionListener(actionEvent ->
+                splitPane.setDividerLocation(btnHide.isSelected() ? 0 : splitPane.getLastDividerLocation())
+        );
 
         btnSolve.addActionListener((actionEvent) -> {
             if (info.getText().length() > 0) {
-                info.append("----\n\n");
+                info.append("\n----\n\n");
             }
             Solver solver = Model.valueOf(editor.getText()).solver();
-            // show result
-            showInfo(solver);
-            solver.solve();  // solve
+            solver.solve();
             showInfo(solver);
         });
 
         btnClear.addActionListener((actionEvent) -> {
             info.setText("");
         });
+
+        btnSimplexLog.addActionListener(actionEvent ->
+                Simplex.LOG.setLevel(btnSimplexLog.isSelected() ? Level.ALL : Level.INFO)
+        );
+    }
+
+    static final ByteArrayLogHandler LOG_HANDLER = new ByteArrayLogHandler();
+
+    static {
+        BnB.LOG.setLevel(Level.ALL);
+
+        Simplex.LOG.addHandler(LOG_HANDLER);
+        BnB.LOG.addHandler(LOG_HANDLER);
     }
 
     private void showInfo(Solver solver) {
-        info.append(solver.toString());
-        info.append("\n\n");
+        info.append(LOG_HANDLER.getString());
     }
 
     public static void main(String[] args) {
