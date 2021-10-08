@@ -27,7 +27,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>com.github.cloudecho.bnb.BnB</mainClass>
+                            <mainClass>com.github.cloudecho.bnb.Gui</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
