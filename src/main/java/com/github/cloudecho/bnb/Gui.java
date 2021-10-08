@@ -66,9 +66,9 @@ public class Gui extends JFrame {
             if (info.getText().length() > 0) {
                 info.append("\n----\n\n");
             }
-            Solver solver = Model.valueOf(editor.getText()).solver();
-            solver.solve();
-            showInfo(solver);
+            Model model = Model.valueOf(editor.getText());
+            model.solver().solve();
+            showInfo(model);
         });
 
         btnClear.addActionListener((actionEvent) -> {
@@ -89,8 +89,12 @@ public class Gui extends JFrame {
         BnB.LOG.addHandler(LOG_HANDLER);
     }
 
-    private void showInfo(Solver solver) {
+    private void showInfo(Model model) {
         info.append(LOG_HANDLER.getString());
+        int j = 0;
+        for (String var : model.variables) {
+            info.append(String.format("var%3d: %s\n", ++j, var));
+        }
     }
 
     public static void main(String[] args) {
