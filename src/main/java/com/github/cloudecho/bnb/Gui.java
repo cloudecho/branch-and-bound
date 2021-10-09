@@ -67,8 +67,9 @@ public class Gui extends JFrame {
                 info.append("\n----\n\n");
             }
             Model model = Model.valueOf(editor.getText());
-            model.solver().solve();
-            showInfo(model);
+            Solver solver = model.newSolver();
+            solver.solve();
+            showInfo(model, solver);
         });
 
         btnClear.addActionListener((actionEvent) -> {
@@ -89,11 +90,18 @@ public class Gui extends JFrame {
         BnB.LOG.addHandler(LOG_HANDLER);
     }
 
-    private void showInfo(Model model) {
+    private void showInfo(Model model, Solver solver) {
         info.append(LOG_HANDLER.getString());
+        info.append(String.format("%s\n%s: %.6f\niterations: %d\n",
+                solver.getState(),
+                solver.getObjectiveType(),
+                solver.getObjective(),
+                solver.getIterations()));
         int j = 0;
         for (String var : model.variables) {
-            info.append(String.format("var%3d: %s\n", ++j, var));
+            double[] x = solver.getX();
+            info.append(String.format("var%3d:%9s = %.6f\n", j + 1, var, x[j]));
+            j++;
         }
     }
 

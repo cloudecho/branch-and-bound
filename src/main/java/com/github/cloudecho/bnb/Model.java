@@ -24,7 +24,7 @@ public class Model {
         return new Parser(text).parse();
     }
 
-    public Solver solver() {
+    public Solver newSolver() {
         return new BnB(objectiveType, c0, c, a, signs, b, freeVars, intVars, binVars);
     }
 
@@ -60,7 +60,7 @@ public class Model {
 
     @Override
     public String toString() {
-        return solver().toString();
+        return newSolver().toString();
     }
 
     private static class Node {
