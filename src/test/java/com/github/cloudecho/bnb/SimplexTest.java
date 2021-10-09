@@ -205,10 +205,57 @@ public class SimplexTest {
         Assert.assertEquals("state", State.SOLVED, simplex.getState());
         Assert.assertEquals("iterations", 1, simplex.getIterations());
         Assert.assertEquals("max*10", -33, (int) (10 * simplex.getMax()));
-        Assert.assertEquals("x[0]*10", 108, (int) (10*x[0]));
+        Assert.assertEquals("x[0]*10", 108, (int) (10 * x[0]));
         Assert.assertEquals("x[1]", 0, (int) x[1]);
         Assert.assertEquals("x[2]*10", 66, (int) (10 * x[2]));
         Assert.assertEquals("x[3]*10", 266, (int) (10 * x[3]));
         Assert.assertEquals("x[4]", 0, (int) x[4]);
+    }
+
+    @Test
+    public void testSolvePivotOnNegative4() {
+        double[] c = {1, 0, 0, 0, 0, 0};
+        double[][] a = {
+                {1, 1, 1, 0, 0, 0},
+                {1, 0, 0, 1, 0, 0},
+                {0, 0, 1, 0, 0, 1},
+                {0, 1, 0, 0, 1, 0}
+        };
+        double[] b = {3, 1, 1, 0.5};
+
+        Simplex simplex = new Simplex(c, a, b);
+        simplex.solve();
+
+        double[] x = simplex.getX();
+        Assert.assertEquals("state", State.NO_SOLUTION, simplex.getState());
+    }
+
+    @Test
+    public void testSolvePivotOnNegative5() {
+        double[] c = {1, 0, 0, 0, 0, 0, 0, 0};
+        double[][] a = {
+                {1, 1, 1, 1, 0, 0, 0, 0},
+                {1, 0, 0, 0, 1, 0, 0, 0},
+                // moved to the tail
+                {0, 0, 1, 0, 0, 0, 1, 0},
+                {0, 0, 0, 1, 0, 0, 0, 1},
+                {0, 1, 0, 0, 0, 1, 0, 0},
+        };
+        double[] b = {4, 1, 1, 1, 1};
+
+        Simplex simplex = new Simplex(c, a, b);
+        simplex.solve();
+
+        double[] x = simplex.getX();
+        Assert.assertEquals("state", State.SOLVED, simplex.getState());
+        Assert.assertEquals("max", 1, (int) simplex.getMax());
+        Assert.assertEquals("x[0]", 1, (int) x[0]);
+        Assert.assertEquals("x[1]", 1, (int) x[1]);
+        Assert.assertEquals("x[2]", 1, (int) x[2]);
+        Assert.assertEquals("x[3]", 1, (int) x[3]);
+        Assert.assertEquals("x[4]", 0, (int) x[4]);
+        Assert.assertEquals("x[5]", 0, (int) x[5]);
+        Assert.assertEquals("x[6]", 0, (int) x[6]);
+        Assert.assertEquals("x[7]", 0, (int) x[7]);
     }
 }

@@ -105,7 +105,9 @@ public class Simplex implements Solver {
         LOG.debug(this);
 
         while (!this.pivot()) ;
-        this.pivotOnNegative();
+        if (State.SOLVING == this.state) {
+            while (!this.pivotOnNegative()) ;
+        }
         this.setXnMax();
         if (State.SOLVING == this.state) {
             this.state = State.SOLVED;
@@ -114,24 +116,27 @@ public class Simplex implements Solver {
         LOG.debug(this);
     }
 
-    private void pivotOnNegative() {
-        if (State.SOLVING != this.state) {
-            return;
-        }
+    /**
+     * Return {@code true} if STOP
+     */
+    private boolean pivotOnNegative() {
+        boolean b = true;
         for (int i = 1; i <= m; i++) {
             if (table[i][n] >= 0) {
                 continue;
             }
             // pivot on negative number
             final int j = indexOfMinRatioColumn(i);
-            if (j < 0) { // not found
-                break;
+            if (-1 == j) { // not found
+                continue;
             }
             LOG.debug("pivot (", i, j, ") on negative", table[i][j]);
             this.iterations++;
+            b = false;
             pivot(i, j);
             LOG.debug(this);
         }
+        return b;
     }
 
     private int indexOfMinRatioColumn(int r) {
