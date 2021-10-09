@@ -118,20 +118,36 @@ public class Simplex implements Solver {
         if (State.SOLVING != this.state) {
             return;
         }
-        for (int i = 1; i < m; i++) {
+        for (int i = 1; i <= m; i++) {
             if (table[i][n] >= 0) {
                 continue;
             }
-            for (int j = 0; j < n; j++) {
-                if (table[i][j] < 0d && table[0][j] == 0d && !Maths.contains(base, j)) {
-                    // pivot on negative number
-                    LOG.debug("pivot (", i, j, ") on negative", table[i][j]);
-                    pivot(i, j);
-                    LOG.debug(this);
-                    break;
-                }
+            // pivot on negative number
+            final int j = indexOfMinRatioColumn(i);
+            if (j < 0) { // not found
+                break;
+            }
+            LOG.debug("pivot (", i, j, ") on negative", table[i][j]);
+            this.iterations++;
+            pivot(i, j);
+            LOG.debug(this);
+        }
+    }
+
+    private int indexOfMinRatioColumn(int r) {
+        double minr = 0;
+        int w = -1; // not found
+        for (int j = 0; j < n; j++) {
+            if (table[r][j] >= 0 || Maths.contains(base, j)) {
+                continue;
+            }
+            final double ratio = table[0][j] / table[r][j];
+            if (minr > ratio || -1 == w) {
+                minr = ratio;
+                w = j;
             }
         }
+        return w;
     }
 
     @Override
