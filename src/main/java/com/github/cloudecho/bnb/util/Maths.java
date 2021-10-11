@@ -1,4 +1,4 @@
-package com.github.cloudecho.bnb;
+package com.github.cloudecho.bnb.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,8 +14,8 @@ public class Maths {
         return Math.round(value * scale) / scale;
     }
 
-    static final int[] EMPTY_INT_ARRAY = new int[0];
-    static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
+    public static final int[] EMPTY_INT_ARRAY = new int[0];
+    public static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
 
     public static int[] unique(int[] vars) {
         if (0 == length(vars)) {

@@ -1,5 +1,7 @@
 package com.github.cloudecho.bnb;
 
+import com.github.cloudecho.bnb.util.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

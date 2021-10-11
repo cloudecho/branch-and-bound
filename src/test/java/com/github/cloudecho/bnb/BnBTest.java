@@ -1,5 +1,6 @@
 package com.github.cloudecho.bnb;
 
+import com.github.cloudecho.bnb.util.Sign;
 import org.junit.Assert;
 import org.junit.Test;
 

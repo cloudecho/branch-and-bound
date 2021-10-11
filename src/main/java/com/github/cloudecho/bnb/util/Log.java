@@ -1,4 +1,4 @@
-package com.github.cloudecho.bnb;
+package com.github.cloudecho.bnb.util;
 
 import java.util.Arrays;
 import java.util.logging.ConsoleHandler;

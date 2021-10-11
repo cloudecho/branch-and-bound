@@ -1,5 +1,8 @@
 package com.github.cloudecho.bnb;
 
+import com.github.cloudecho.bnb.util.ByteArrayLogHandler;
+import com.github.cloudecho.bnb.util.Log;
+import com.github.cloudecho.bnb.util.LogFactory;
 import com.github.cloudecho.bnb.ui.TextLineNumber;
 
 import javax.swing.*;

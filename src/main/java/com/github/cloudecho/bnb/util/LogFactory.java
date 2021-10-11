@@ -1,4 +1,4 @@
-package com.github.cloudecho.bnb;
+package com.github.cloudecho.bnb.util;
 
 public class LogFactory {
     static {
