@@ -257,25 +257,26 @@ public class GeneralLP implements Solver {
         b.append(" c0=").append(c0);
 
         // print c
-        b.append('\n').append(" [");
+        b.append('\n').append(" [ ");
         for (int j = 0; j < n; j++) {
             b.append(Maths.contains(freeVars, j + 1) ? '*' : ' ');
             b.append(String.format("%-8.3f", c[j])).append(' ');
         }
-        b.append(" =  ").append(objectiveType).append("-c0\n  ");
+        b.append(" =  ").append(objectiveType).append("-c0\n   ");
         // hr
         for (int j = 0; j < n; j++) {
             b.append(" -----    ");
         }
-        b.append(" +  -----\n  ");
+        b.append(" +  -----\n");
 
         // print a
         for (int i = 0; i < m; i++) {
             // end line
             if (i > 0) {
-                b.append("\n  ");
+                b.append("\n");
             }
-
+            // row number
+            b.append(String.format("%2d:", i + 1));
             // print a[i]
             for (int j = 0; j < n; j++) {
                 b.append(String.format(" %-8.3f", a[i][j])).append(' ');

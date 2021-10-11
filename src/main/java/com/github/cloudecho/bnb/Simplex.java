@@ -459,19 +459,25 @@ public class Simplex implements Solver {
         b.append('\n').append(" x=").append(Arrays.toString(x));
 
         // table
-        b.append('\n').append(" [");
+        b.append('\n').append(" [ ");
+        for (int j = 0; j <= n2; j++) {
+            b.append(n == j ? " |  " : ' ');
+            b.append(String.format("%-9d", j));
+        }
         for (int i = 0; i <= m; i++) {
             // end line
-            if (i > 0) {
-                b.append("\n  ");
-            }
+            b.append('\n');
+
             // hr
             if (1 == i) {
+                b.append("   ");
                 for (int j = 0; j < n; j++) {
                     b.append(" -----    ");
                 }
-                b.append(" +  -----\n  ");
+                b.append(" +  -----\n");
             }
+            // row number
+            b.append(String.format("%2d:", i));
             // print table[i]
             for (int j = 0; j <= n2; j++) {
                 if (n == j) {
