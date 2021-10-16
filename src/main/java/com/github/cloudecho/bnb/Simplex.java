@@ -282,7 +282,8 @@ public class Simplex implements Solver {
 
             // for each element in this row
             for (int j = 0; j <= n2; j++) {
-                table[i][j] += -v * table[r][j];
+                double v2 = -v * table[r][j] + table[i][j];
+                table[i][j] = Double.isNaN(v2) ? 0 : v2;
             }
         }
     }
