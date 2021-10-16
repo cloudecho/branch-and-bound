@@ -46,6 +46,7 @@ public class Simplex implements Solver {
     private final double[][] table; // double[m+1][n+1]
     private final int[] base; // int[m]
 
+    private int m2;
     private int n2;
 
     /**
@@ -70,6 +71,7 @@ public class Simplex implements Solver {
     public Simplex(double[] c, double[][] a, double[] b) {
         this.m = a.length;
         this.n = a[0].length;
+        this.m2 = m;
         this.n2 = n;
 
         // check length
@@ -167,7 +169,7 @@ public class Simplex implements Solver {
     private void setXnMax() {
         this.max = Maths.round(-table[0][n], precision);
 
-        for (int i = 0; i < m; i++) {
+        for (int i = 0; i < m2; i++) {
             double b = Maths.round(table[i + 1][n], precision); // b
             int j = base[i];
             if (j > n || b < 0) { // aVar || not feasible
@@ -201,6 +203,16 @@ public class Simplex implements Solver {
         int count = 0;
         for (int i = 0; i < endIndex; i++) {
             if (data[i] > 0) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private int nonZeroNum(double[] data, int endIndex) {
+        int count = 0;
+        for (int i = 0; i < endIndex; i++) {
+            if (data[i] != 0) {
                 count++;
             }
         }
@@ -271,7 +283,7 @@ public class Simplex implements Solver {
         normalize(r, c);
 
         // for each row except r-th
-        for (int i = 0; i <= m; i++) {
+        for (int i = 0; i <= m2; i++) {
             if (r == i) {
                 continue;
             }
@@ -310,7 +322,7 @@ public class Simplex implements Solver {
     private int baseVar(int j) {
         int w = -1;
         int count = 0;
-        for (int i = 1; i <= m && count < 2; i++) {
+        for (int i = 1; i <= m2 && count < 2; i++) {
             if (table[i][j] > 0d) {
                 count++;
                 w = i - 1;
@@ -356,7 +368,7 @@ public class Simplex implements Solver {
      */
     private boolean driveAvars() {
         boolean b = true;
-        for (int r = 1; r <= m; r++) {
+        for (int r = 1; r <= m2; r++) {
             if (base[r - 1] < n) { // non-aVar
                 continue;
             }
@@ -371,8 +383,32 @@ public class Simplex implements Solver {
                 break;
             }
         }
+        if (b) {
+            b = removeZeroRow();
+        }
         this.n2 = n; // discard aVars
         return b;
+    }
+
+    private boolean removeZeroRow() {
+        boolean removed = false;
+        for (int r = 1; r <= m2; r++) {
+            if (base[r - 1] < n) { // non-aVar
+                continue;
+            }
+            if (0 == nonZeroNum(table[r], n + 1)) {
+                // remove r-th row
+                for (int i = r; i < m2; i++) {
+                    table[i] = table[i + 1];
+                    base[i - 1] = base[i];
+                }
+                base[m2 - 1] = -1;
+                this.m2--;
+                removed = true;
+                LOG.debug("removeZeroRow", r);
+            }
+        }
+        return removed;
     }
 
     private int indexOfMaxc() {
@@ -393,7 +429,7 @@ public class Simplex implements Solver {
     private int indexOfMinRatio(int c) {
         double minv = 0;
         int w = -1;
-        for (int i = 1; i <= m; i++) {
+        for (int i = 1; i <= m2; i++) {
             double v = table[i][c];
             if (v <= 0d) {
                 continue;
@@ -465,7 +501,7 @@ public class Simplex implements Solver {
             b.append(n == j ? " |  " : ' ');
             b.append(String.format("%-9d", j));
         }
-        for (int i = 0; i <= m; i++) {
+        for (int i = 0; i <= m2; i++) {
             // end line
             b.append('\n');
 
