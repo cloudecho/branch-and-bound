@@ -254,10 +254,15 @@ public class GeneralLP implements Solver {
         this.toStringExtra(b);
 
         b.append('\n').append(" x=").append(Arrays.toString(x));
-        b.append(" c0=").append(c0);
+        b.append(" c0=").append(c0).append("\n [  ");
+
+        // print column number
+        for (int j = 0; j < n; j++) {
+            b.append(String.format("%-10d", j));
+        }
 
         // print c
-        b.append('\n').append(" [ ");
+        b.append("\n   ");
         for (int j = 0; j < n; j++) {
             b.append(Maths.contains(freeVars, j + 1) ? '*' : ' ');
             b.append(String.format("%-8.3f", c[j])).append(' ');
