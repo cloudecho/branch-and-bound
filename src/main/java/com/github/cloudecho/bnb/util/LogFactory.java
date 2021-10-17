@@ -1,5 +1,10 @@
 package com.github.cloudecho.bnb.util;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+
 public class LogFactory {
     static {
         System.setProperty("java.util.logging.SimpleFormatter.format",
@@ -19,7 +24,35 @@ public class LogFactory {
         return getLog(pkg + '.' + clazz.getSimpleName());
     }
 
+    public static final String LOG_LEVEL_PROP = "com.github.cloudecho.bnb.LogLevel";
+
     public static Log getLog(String name) {
-        return new Log(name);
+        Log log = new Log(name);
+        getConfiguredLogLevel().ifPresent(log::setLevel);
+        return log;
+    }
+
+    static final List<Level> LOG_LEVELS = Arrays.asList(
+            Level.ALL,
+            Level.FINEST,
+            Level.FINER,
+            Level.FINE,
+            Level.INFO,
+            Level.SEVERE,
+            Level.WARNING,
+            Level.CONFIG,
+            Level.OFF);
+
+    static Optional<Level> getConfiguredLogLevel() {
+        String level = System.getProperty(LOG_LEVEL_PROP, "");
+        if (Strings.isEmpty(level)) {
+            return Optional.empty();
+        }
+        for (Level l : LOG_LEVELS) {
+            if (level.equalsIgnoreCase(l.getName())) {
+                return Optional.of(l);
+            }
+        }
+        return Optional.empty();// no match
     }
 }
