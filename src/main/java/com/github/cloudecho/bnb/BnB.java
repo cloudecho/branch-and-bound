@@ -148,7 +148,7 @@ public class BnB extends GeneralLP implements Solver {
         static final char LEFT = 'L';
         static final char RIGHT = 'R';
 
-        final GeneralLP lp;
+        GeneralLP lp;
         final int level;// starts from 0
         final char branch;
         final Node parent;
@@ -293,6 +293,7 @@ public class BnB extends GeneralLP implements Solver {
 
         nodes.addLast(new Node(lp1, parent, Node.LEFT));
         nodes.addLast(new Node(lp2, parent, Node.RIGHT));
+        parent.lp = null; // release memory
     }
 
     /**
@@ -319,15 +320,16 @@ public class BnB extends GeneralLP implements Solver {
 
         nodes.addLast(new Node(lp1, parent, Node.LEFT).binary(v));
         nodes.addLast(new Node(lp2, parent, Node.RIGHT).binary(v));
+        parent.lp = null; // release memory
     }
 
     private void branch01Arguments(final double[] c2, final double[][] a2, final double[] bRight, GeneralLP lp0, final int binVar) {
         final int j = binVar - 1;
+        c2[j] = 0;
         for (int i = 0; i < lp0.m; i++) {
             if (0d == lp0.a[i][j]) {
                 continue;
             }
-            c2[j] = 0;
             a2[i] = Arrays.copyOf(lp0.a[i], lp0.n);
             a2[i][j] = 0;
             bRight[i] -= lp0.a[i][j];
