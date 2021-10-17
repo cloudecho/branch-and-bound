@@ -208,14 +208,13 @@ public class Simplex implements Solver {
         return false;
     }
 
-    private int nonZeroNum(double[] data, int endIndex) {
-        int count = 0;
+    private boolean existsNonZeroNum(double[] data, int endIndex) {
         for (int i = 0; i < endIndex; i++) {
             if (data[i] != 0) {
-                count++;
+                return true;
             }
         }
-        return count;
+        return false;
     }
 
     /**
@@ -397,7 +396,7 @@ public class Simplex implements Solver {
             if (base[r - 1] < n) { // non-aVar
                 continue;
             }
-            if (0 == nonZeroNum(table[r], n + 1)) {
+            if (!existsNonZeroNum(table[r], n + 1)) {
                 // remove r-th row
                 for (int i = r; i < m2; i++) {
                     table[i] = table[i + 1];
