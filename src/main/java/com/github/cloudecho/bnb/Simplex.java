@@ -189,7 +189,7 @@ public class Simplex implements Solver {
         // for each row, except 0-th
         for (int i = 1; i <= m; i++) {
             double b = table[i][n];
-            if (b > 0d || b == 0d && positiveNum(table[i], n) > 0) {
+            if (b > 0d || b == 0d && existsPositiveNum(table[i], n)) {
                 continue;
             }
             // b < 0d || no positive number in this row
@@ -199,14 +199,13 @@ public class Simplex implements Solver {
         }
     }
 
-    private int positiveNum(double[] data, int endIndex) {
-        int count = 0;
+    private boolean existsPositiveNum(double[] data, int endIndex) {
         for (int i = 0; i < endIndex; i++) {
             if (data[i] > 0) {
-                count++;
+                return true;
             }
         }
-        return count;
+        return false;
     }
 
     private int nonZeroNum(double[] data, int endIndex) {
@@ -338,7 +337,9 @@ public class Simplex implements Solver {
     private boolean pivot() {
         final int w = indexOfMaxc();
         final double maxc = table[0][w];
-        LOG.debug("iter=" + iterations, "e=" + w, "maxc=" + Maths.round(maxc, precision));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("iter=" + iterations, "e=" + w, "maxc=" + Maths.round(maxc, precision));
+        }
         if (maxc <= 0) {
             return this.driveAvars();
         }
@@ -384,7 +385,7 @@ public class Simplex implements Solver {
             }
         }
         if (b) {
-            b = removeZeroRow();
+            b = !removeZeroRow();
         }
         this.n2 = n; // discard aVars
         return b;
