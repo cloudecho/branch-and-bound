@@ -4,7 +4,7 @@
     <groupId>com.github.cloudecho</groupId>
     <artifactId>bnb</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.5</version>
+    <version>0.1.6</version>
     <url>https://github.com/cloudecho/branch-and-bound</url>
 
     <properties>

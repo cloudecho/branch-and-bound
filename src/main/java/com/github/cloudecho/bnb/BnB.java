@@ -98,6 +98,9 @@ public class BnB extends GeneralLP implements Solver {
             if (b[i] != 1d || a[i][c] != 1d) {
                 continue;
             }
+            if (Sign.GE == signs[i]) {
+                continue;
+            }
             if (existsNegativeNumOrFreeVar(a[i], n)) {
                 continue;
             }
