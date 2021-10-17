@@ -254,7 +254,7 @@ public class GeneralLP implements Solver {
         this.toStringExtra(b);
 
         b.append('\n').append(" x=").append(Arrays.toString(x));
-        b.append(" c0=").append(c0).append("\n [  ");
+        b.append(" c0=").append(c0).append("\n [   ");
 
         // print column number
         for (int j = 0; j < n; j++) {
@@ -262,12 +262,12 @@ public class GeneralLP implements Solver {
         }
 
         // print c
-        b.append("\n   ");
+        b.append("\n    ");
         for (int j = 0; j < n; j++) {
             b.append(Maths.contains(freeVars, j + 1) ? '*' : ' ');
             b.append(String.format("%-8.3f", c[j])).append(' ');
         }
-        b.append(" =  ").append(objectiveType).append("-c0\n   ");
+        b.append(" =  ").append(objectiveType).append("-c0\n    ");
         // hr
         for (int j = 0; j < n; j++) {
             b.append(" -----    ");
@@ -281,7 +281,7 @@ public class GeneralLP implements Solver {
                 b.append("\n");
             }
             // row number
-            b.append(String.format("%2d:", i + 1));
+            b.append(String.format("%3d:", i + 1));
             // print a[i]
             for (int j = 0; j < n; j++) {
                 b.append(String.format(" %-8.3f", a[i][j])).append(' ');

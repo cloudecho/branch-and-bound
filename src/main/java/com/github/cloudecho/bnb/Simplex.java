@@ -496,7 +496,7 @@ public class Simplex implements Solver {
         b.append('\n').append(" x=").append(Arrays.toString(x));
 
         // table
-        b.append('\n').append(" [ ");
+        b.append('\n').append(" [  ");
         for (int j = 0; j <= n2; j++) {
             b.append(n == j ? " |  " : ' ');
             b.append(String.format("%-9d", j));
@@ -507,14 +507,14 @@ public class Simplex implements Solver {
 
             // hr
             if (1 == i) {
-                b.append("   ");
+                b.append("    ");
                 for (int j = 0; j < n; j++) {
                     b.append(" -----    ");
                 }
                 b.append(" +  -----\n");
             }
             // row number
-            b.append(String.format("%2d:", i));
+            b.append(String.format("%3d:", i));
             // print table[i]
             for (int j = 0; j <= n2; j++) {
                 if (n == j) {
