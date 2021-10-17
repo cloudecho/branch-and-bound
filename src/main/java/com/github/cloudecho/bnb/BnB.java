@@ -31,6 +31,7 @@ public class BnB extends GeneralLP implements Solver {
 
     private final int[] intVars;
     private final int nBinVars;
+    private int nBinVars2;
 
     /**
      * Constructor. All variables are default to be non-negative.
@@ -53,6 +54,7 @@ public class BnB extends GeneralLP implements Solver {
         super(objectiveType, c0, c, a, signs, b, freeVars);
         this.intVars = Maths.unique(Maths.union(binVars, intVars));
         this.nBinVars = Maths.length(Maths.unique(binVars));
+        this.nBinVars2 = nBinVars;
 
         LOG.debug("intVars", this.intVars);
         LOG.debug("nBinVars", this.nBinVars);
@@ -74,6 +76,11 @@ public class BnB extends GeneralLP implements Solver {
         double[][] r = a;
         for (int j = 0; j < nBinVars; j++) {
             final int v = intVars[j];
+            if (existsBinConstraint(v)) {
+                LOG.debug("existsBinConstraint", v);
+                this.nBinVars2--;
+                continue;
+            }
             double[] constraint = new double[n];
             constraint[v - 1] = 1d;
             r = Maths.append(r, constraint);
@@ -82,11 +89,41 @@ public class BnB extends GeneralLP implements Solver {
     }
 
     /**
+     * Return {@code true} if binary constraint for x(v) already exists.
+     */
+    private boolean existsBinConstraint(int v) {
+        final int c = v - 1; // column
+        // for each row
+        for (int i = 0; i < m; i++) {
+            if (b[i] != 1d || a[i][c] != 1d) {
+                continue;
+            }
+            if (existsNegativeNumOrFreeVar(a[i], n)) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean existsNegativeNumOrFreeVar(double[] row, int endIndex) {
+        for (int j = 0; j < endIndex; j++) {
+            if (row[j] < 0) {
+                return true;
+            }
+            if (row[j] != 0 && Maths.contains(freeVars, j)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * b with binary constraints
      */
     private double[] b2() {
         double[] r = b;
-        for (int j = 0; j < nBinVars; j++) {
+        for (int j = 0; j < nBinVars2; j++) {
             r = Maths.append(r, 1d);
         }
         return r;
@@ -97,7 +134,7 @@ public class BnB extends GeneralLP implements Solver {
      */
     private Sign[] signs2() {
         Sign[] r = signs;
-        for (int j = 0; j < nBinVars; j++) {
+        for (int j = 0; j < nBinVars2; j++) {
             r = Maths.append(r, Sign.LE);
         }
         return r;
@@ -113,6 +150,8 @@ public class BnB extends GeneralLP implements Solver {
         final char branch;
         final Node parent;
 
+        int binVar = -1;
+
         public Node(GeneralLP lp, Node parent, char branch) {
             this.lp = lp;
             this.parent = parent;
@@ -120,10 +159,30 @@ public class BnB extends GeneralLP implements Solver {
             this.level = (parent == null) ? 0 : parent.level + 1;
         }
 
+        void solve() {
+            lp.solve();
+
+            // for binary var
+            Node n = this;
+            do {
+                if (-1 == n.binVar) {
+                    break;
+                }
+                this.lp.x[n.binVar - 1] = (LEFT == n.branch) ? 0d : 1d;
+                n = n.parent;
+            } while (n != null);
+        }
+
+        Node binary(int binVar) {
+            this.binVar = binVar;
+            return this;
+        }
+
         @Override
         public String toString() {
             return (parent == null ? "" : parent + "-") + level + branch;
         }
+
     }
 
     /**
@@ -139,7 +198,8 @@ public class BnB extends GeneralLP implements Solver {
         this.state = State.SOLVING;
 
         // create root node
-        GeneralLP lp0 = new GeneralLP(objectiveType, c0, c, a2(), signs2(), b2(), freeVars);
+        final double[][] a2 = a2();
+        GeneralLP lp0 = new GeneralLP(objectiveType, c0, c, a2, signs2(), b2(), freeVars);
         nodes.add(new Node(lp0, null, Node.ROOT));
 
         while (!nodes.isEmpty()) {
@@ -156,7 +216,8 @@ public class BnB extends GeneralLP implements Solver {
 
     private void solve(Node node) {
         node.lp.setPrecision(this.precision);
-        node.lp.solve();
+        node.solve();
+
         LOG.debug(node, node.lp.state);
 
         // if the LP relaxation unbounded
@@ -238,23 +299,36 @@ public class BnB extends GeneralLP implements Solver {
         final GeneralLP lp0 = parent.lp;
         final int v = intVars[parent.level];
 
-        final Sign[] signs2 = Arrays.copyOf(lp0.signs, lp0.signs.length);
-        signs2[m + parent.level] = Sign.EQ;
+        double[][] a2 = Arrays.copyOf(lp0.a, lp0.m);
+        double[] bLeft = lp0.b; // left branch
+        double[] bRight = Arrays.copyOf(lp0.b, lp0.m); // right branch
+        double[] c2 = Arrays.copyOf(lp0.c, lp0.n);
+        double c0Right = lp0.c0 + lp0.c[v - 1]; // c0Left unchanged
+        branch01Arguments(c2, a2, bRight, lp0, v);
 
         // LP1: left branch (=0)
         LOG.debug(parent, "left branch x(", v, ") =", 0);
-        final double[] b1 = Arrays.copyOf(lp0.b, lp0.b.length);
-        b1[m + parent.level] = 0d;
-        GeneralLP lp1 = new GeneralLP(lp0.objectiveType, lp0.c0, lp0.c, lp0.a, signs2, b1, lp0.freeVars);
+        GeneralLP lp1 = new GeneralLP(lp0.objectiveType, lp0.c0, c2, a2, lp0.signs, bLeft, lp0.freeVars);
 
         // LP2: right branch (=1)
         LOG.debug(parent, "right branch x(", v, ") =", 1);
-        final double[] b2 = Arrays.copyOf(lp0.b, lp0.b.length);
-        b2[m + parent.level] = 1d;
-        GeneralLP lp2 = new GeneralLP(lp0.objectiveType, lp0.c0, lp0.c, lp0.a, signs2, b2, lp0.freeVars);
+        GeneralLP lp2 = new GeneralLP(lp0.objectiveType, c0Right, c2, a2, lp0.signs, bRight, lp0.freeVars);
 
-        nodes.addLast(new Node(lp1, parent, Node.LEFT));
-        nodes.addLast(new Node(lp2, parent, Node.RIGHT));
+        nodes.addLast(new Node(lp1, parent, Node.LEFT).binary(v));
+        nodes.addLast(new Node(lp2, parent, Node.RIGHT).binary(v));
+    }
+
+    private void branch01Arguments(final double[] c2, final double[][] a2, final double[] bRight, GeneralLP lp0, final int binVar) {
+        final int j = binVar - 1;
+        for (int i = 0; i < lp0.m; i++) {
+            if (0d == lp0.a[i][j]) {
+                continue;
+            }
+            c2[j] = 0;
+            a2[i] = Arrays.copyOf(lp0.a[i], lp0.n);
+            a2[i][j] = 0;
+            bRight[i] -= lp0.a[i][j];
+        }
     }
 
     private boolean isLeaf(Node node) {
