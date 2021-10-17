@@ -384,14 +384,13 @@ public class Simplex implements Solver {
             }
         }
         if (b) {
-            b = !removeZeroRow();
+            removeZeroRow();
         }
         this.n2 = n; // discard aVars
         return b;
     }
 
-    private boolean removeZeroRow() {
-        boolean removed = false;
+    private void removeZeroRow() {
         for (int r = 1; r <= m2; r++) {
             if (base[r - 1] < n) { // non-aVar
                 continue;
@@ -404,11 +403,9 @@ public class Simplex implements Solver {
                 }
                 base[m2 - 1] = -1;
                 this.m2--;
-                removed = true;
                 LOG.debug("removeZeroRow", r);
             }
         }
-        return removed;
     }
 
     private int indexOfMaxc() {
