@@ -20,6 +20,12 @@ public class Log {
         this.logger.addHandler(CONSOLE_HANDLER);
     }
 
+    public void trace(Object... msg) {
+        if (isTraceEnabled()) {
+            logger.finer(toString(msg));
+        }
+    }
+
     public void debug(Object... msg) {
         if (isDebugEnabled()) {
             logger.fine(toString(msg));
@@ -44,6 +50,10 @@ public class Log {
         }
     }
 
+    public boolean isTraceEnabled() {
+        return logger.isLoggable(Level.FINER);
+    }
+
     public boolean isDebugEnabled() {
         return logger.isLoggable(Level.FINE);
     }
@@ -64,7 +74,7 @@ public class Log {
         logger.setLevel(level);
     }
 
-    public void addHandler(Handler handler){
+    public void addHandler(Handler handler) {
         logger.addHandler(handler);
     }
 

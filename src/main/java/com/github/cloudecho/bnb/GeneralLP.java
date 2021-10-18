@@ -102,7 +102,7 @@ public class GeneralLP implements Solver {
 
     @Override
     public void solve() {
-        LOG.debug(this);
+        LOG.trace(this);
         standardize();
 
         Simplex simplex = new Simplex(c2, a2, b);
@@ -112,7 +112,7 @@ public class GeneralLP implements Solver {
         this.iterations = simplex.getIterations();
         this.state = simplex.getState();
         setXnObjective(simplex);
-        LOG.debug(this);
+        LOG.trace(this);
     }
 
     private void setXnObjective(Simplex simplex) {
@@ -193,8 +193,8 @@ public class GeneralLP implements Solver {
             j++;
         }
 
-        LOG.debug("c2", c2);
-        LOG.debug("a2", a2);
+        LOG.trace("c2", c2);
+        LOG.trace("a2", a2);
     }
 
     @Override

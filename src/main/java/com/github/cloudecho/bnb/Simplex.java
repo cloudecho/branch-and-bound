@@ -104,11 +104,11 @@ public class Simplex implements Solver {
     public void solve() {
         this.state = State.SOLVING;
         this.preprocess();
-        LOG.debug("preprocess", this);
+        LOG.trace("preprocess", this);
 
         this.initBase();
         LOG.debug("success to init base");
-        LOG.debug(this);
+        LOG.trace(this);
 
         while (!this.pivot()) ;
         if (State.SOLVING == this.state) {
@@ -119,7 +119,7 @@ public class Simplex implements Solver {
             this.state = State.SOLVED;
         }
 
-        LOG.debug(this);
+        LOG.trace(this);
     }
 
     /**
@@ -140,7 +140,7 @@ public class Simplex implements Solver {
             this.iterations++;
             b = false;
             pivot(i, j);
-            LOG.debug(this);
+            LOG.trace(this);
         }
         return b;
     }
@@ -353,7 +353,7 @@ public class Simplex implements Solver {
             return this.driveAvars();
         }
         pivot(r, w);
-        LOG.debug(this);
+        LOG.trace(this);
 
         return false;
     }
@@ -379,7 +379,7 @@ public class Simplex implements Solver {
                 LOG.debug("driving aVar", base[r - 1]);
                 b = false;
                 pivot(r, j);
-                LOG.debug(this);
+                LOG.trace(this);
                 break;
             }
         }
