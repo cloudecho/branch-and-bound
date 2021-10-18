@@ -100,6 +100,9 @@ public class Simplex implements Solver {
         }
     }
 
+    static final String MAX_ITERATIONS_PROP = "com.github.cloudecho.bnb.MAX_ITERATIONS";
+    static final int MAX_ITERATIONS = Integer.parseInt(System.getProperty(MAX_ITERATIONS_PROP, "1000000")); // 1 million
+
     private int iterations = 0;
     private State state = State.ZERO;
 
@@ -114,10 +117,20 @@ public class Simplex implements Solver {
         LOG.debug("success to init base");
         LOG.trace(this);
 
-        while (!this.pivot()) ;
+        while (this.pivot()) {
+            if (iterations > MAX_ITERATIONS) {
+                this.state = State.NO_SOLUTION;
+                break;
+            }
+        }
         if (State.SOLVING == this.state) {
             this.resetCycling();
-            while (!this.pivotOnNegative()) ;
+            while (this.pivotOnNegative()) {
+                if (iterations > MAX_ITERATIONS) {
+                    this.state = State.NO_SOLUTION;
+                    break;
+                }
+            }
         }
         this.setXnMax();
         if (State.SOLVING == this.state) {
@@ -128,10 +141,10 @@ public class Simplex implements Solver {
     }
 
     /**
-     * Return {@code true} if STOP
+     * Return {@code true} if continue
      */
     private boolean pivotOnNegative() {
-        boolean b = true;
+        boolean goOn = false;
         for (int i = 1; i <= m; i++) {
             if (table[i][n] >= 0) {
                 continue;
@@ -144,16 +157,17 @@ public class Simplex implements Solver {
 
             if (cycling[i].inc(table[i][n])) {
                 LOG.debug("cycling2 detected", '(', i, j, ')');
-                return true; // cycling
+                this.state = State.NO_SOLUTION;
+                return false; // cycling
             }
 
             LOG.debug("iter", iterations, "pivot (", i, j, ") on negative", table[i][j], 'b', table[i][n]);
             this.iterations++;
-            b = false;
+            goOn = true;
             pivot(i, j);
             LOG.trace(this);
         }
-        return b;
+        return goOn;
     }
 
     private int indexOfMinRatioColumn(int r) {
@@ -342,7 +356,7 @@ public class Simplex implements Solver {
     }
 
     /**
-     * Return {@code true} if STOP
+     * Return {@code true} if continue
      */
     private boolean pivot() {
         final int w = indexOfMaxc();
@@ -367,13 +381,14 @@ public class Simplex implements Solver {
         // detect cycling
         if (w < n && cycling[w].inc(table[r][n])) {
             LOG.debug("cycling detected", '(', r, w, ')');
-            return true;
+            this.state = State.NO_SOLUTION;
+            return false;
         }
 
         pivot(r, w);
         LOG.trace(this);
 
-        return false;
+        return true;
     }
 
     private void pivot(int r, int c) {
@@ -382,10 +397,10 @@ public class Simplex implements Solver {
     }
 
     /**
-     * Return {@code true} if STOP
+     * Return {@code true} if continue
      */
     private boolean driveAvars() {
-        boolean b = true;
+        boolean goOn = false;
         for (int r = 1; r <= m2; r++) {
             if (base[r - 1] < n) { // non-aVar
                 continue;
@@ -395,17 +410,17 @@ public class Simplex implements Solver {
                     continue;
                 }
                 LOG.debug("driving aVar", base[r - 1]);
-                b = false;
+                goOn = true;
                 pivot(r, j);
                 LOG.trace(this);
                 break;
             }
         }
-        if (b) {
+        if (!goOn) {
             removeZeroRow();
         }
         this.n2 = n; // discard aVars
-        return b;
+        return goOn;
     }
 
     private void removeZeroRow() {
