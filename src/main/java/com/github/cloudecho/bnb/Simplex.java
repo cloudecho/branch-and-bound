@@ -74,6 +74,9 @@ public class Simplex implements Solver {
         this.m2 = m;
         this.n2 = n;
 
+        this.cycling = new C[n];
+        this.initCycling();
+
         // check length
         if (m != b.length) {
             throw new IllegalArgumentException("m not matched");
@@ -103,6 +106,7 @@ public class Simplex implements Solver {
     @Override
     public void solve() {
         this.state = State.SOLVING;
+        this.resetCycling();
         this.preprocess();
         LOG.trace("preprocess", this);
 
@@ -112,6 +116,7 @@ public class Simplex implements Solver {
 
         while (!this.pivot()) ;
         if (State.SOLVING == this.state) {
+            this.resetCycling();
             while (!this.pivotOnNegative()) ;
         }
         this.setXnMax();
@@ -136,7 +141,13 @@ public class Simplex implements Solver {
             if (-1 == j) { // not found
                 continue;
             }
-            LOG.debug("pivot (", i, j, ") on negative", table[i][j]);
+
+            if (cycling[i].inc(table[i][n])) {
+                LOG.debug("cycling2 detected", '(', i, j, ')');
+                return true; // cycling
+            }
+
+            LOG.debug("iter", iterations, "pivot (", i, j, ") on negative", table[i][j], 'b', table[i][n]);
             this.iterations++;
             b = false;
             pivot(i, j);
@@ -244,7 +255,7 @@ public class Simplex implements Solver {
                 if (r < 0 || base[r - 1] >= 0) {
                     continue;
                 }
-                LOG.debug("base", 'r', r, "var", j);
+                LOG.trace("base", 'r', r, "var", j);
                 base[r - 1] = j;
                 // vars[j] = -1; // mark selected
                 gaussian(r, j);
@@ -266,7 +277,7 @@ public class Simplex implements Solver {
                 continue;
             }
             ++n2;
-            LOG.debug("base", 'i', i, "aVar", n2);
+            LOG.trace("base", 'i', i, "aVar", n2);
             base[i] = n2;
             table[i + 1][n2] = 1;
         }
@@ -352,6 +363,13 @@ public class Simplex implements Solver {
             this.state = State.UNBOUNDED;
             return this.driveAvars();
         }
+
+        // detect cycling
+        if (w < n && cycling[w].inc(table[r][n])) {
+            LOG.debug("cycling detected", '(', r, w, ')');
+            return true;
+        }
+
         pivot(r, w);
         LOG.trace(this);
 
@@ -405,6 +423,44 @@ public class Simplex implements Solver {
                 this.m2--;
                 LOG.debug("removeZeroRow", r);
             }
+        }
+    }
+
+    private static final String CYCLING_THRESHOLD_PROP = "com.github.cloudecho.bnb.CYCLING_THRESHOLD";
+    private static final int CYCLING_THRESHOLD = Integer.parseInt(System.getProperty(CYCLING_THRESHOLD_PROP, "10"));
+
+    private class C {
+        int count = 0;
+        double v = 0d;
+
+        boolean inc(final double v) {
+            if (0 == count) {
+                count++;
+                this.v = Maths.round(v, precision);
+            } else if (Maths.round(v, precision) == this.v) {
+                count++;
+            }
+
+            return count >= CYCLING_THRESHOLD;
+        }
+
+        void reset() {
+            count = 0;
+            v = 0d;
+        }
+    }
+
+    private final C[] cycling;
+
+    private void initCycling() {
+        for (int i = 0; i < n; i++) {
+            cycling[i] = new C();
+        }
+    }
+
+    private void resetCycling() {
+        for (int i = 0; i < n; i++) {
+            cycling[i].reset();
         }
     }
 
