@@ -24,7 +24,7 @@ public class LogFactory {
         return getLog(pkg + '.' + clazz.getSimpleName());
     }
 
-    public static final String LOG_LEVEL_PROP = "com.github.cloudecho.bnb.LogLevel";
+    public static final String LOG_LEVEL_PROP = "com.github.cloudecho.bnb.LOG_LEVEL";
 
     public static Log getLog(String name) {
         Log log = new Log(name);
@@ -44,7 +44,11 @@ public class LogFactory {
             Level.OFF);
 
     static Optional<Level> getConfiguredLogLevel() {
-        String level = System.getProperty(LOG_LEVEL_PROP, "");
+        return getConfiguredLogLevel(LOG_LEVEL_PROP);
+    }
+
+    public static Optional<Level> getConfiguredLogLevel(String prop) {
+        String level = System.getProperty(prop, "");
         if (Strings.isEmpty(level)) {
             return Optional.empty();
         }

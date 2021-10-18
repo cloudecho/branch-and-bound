@@ -1,12 +1,13 @@
 package com.github.cloudecho.bnb;
 
-import com.github.cloudecho.bnb.util.Log;
-import com.github.cloudecho.bnb.util.LogFactory;
-import com.github.cloudecho.bnb.util.Maths;
-import com.github.cloudecho.bnb.util.Sign;
+import com.github.cloudecho.bnb.util.*;
 
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.Deque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Branch-and-bound for mixed-integer programming.
@@ -28,6 +29,13 @@ import java.util.LinkedList;
  */
 public class BnB extends GeneralLP implements Solver {
     static final Log LOG = LogFactory.getLog(BnB.class);
+
+    public static final String LOG_LEVEL_PROP = "com.github.cloudecho.bnb.BnB.LOG_LEVEL";
+
+    static {
+        LogFactory.getConfiguredLogLevel(LOG_LEVEL_PROP)
+                .ifPresent(LOG::setLevel);
+    }
 
     private final int[] intVars;
     private final int nBinVars;
@@ -191,33 +199,74 @@ public class BnB extends GeneralLP implements Solver {
     /**
      * The problem tree
      */
-    private final LinkedList<Node> nodes = new LinkedList<>();
+    private final Deque<Node> nodes = new LinkedBlockingDeque<>();
+
+    private final AtomicInteger taskCounter = new AtomicInteger(0);
+
+    public static final String SOLVING_THREADS_PROP = "com.github.cloudecho.bnb.SOLVING_THREADS";
+
+    static final int nThreads = Integer.parseInt(System.getProperty(SOLVING_THREADS_PROP, "2"));
+
+    private final ExecutorService executor = Executors.newFixedThreadPool(
+            nThreads, new NamedThreadFactory().namePrefix("bnb-solver"));
 
     @Override
     public void solve() {
         this.objective = objectiveType.isMax() ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
         this.iterations = 0;
-        LOG.debug(this);
+        LOG.trace(this);
         this.state = State.SOLVING;
 
         // create root node
         final double[][] a2 = a2();
         GeneralLP lp0 = new GeneralLP(objectiveType, c0, c, a2, signs2(), b2(), freeVars);
         nodes.add(new Node(lp0, null, Node.ROOT));
+        this.submitTasks(1);
 
-        while (!nodes.isEmpty()) {
-            this.iterations++;
-            solve(nodes.removeLast());
+        // wait to complete
+        synchronized (this) {
+            while (taskCounter.get() > 0) {
+                try {
+                    LOG.debug("wait to complete");
+                    this.wait();
+                } catch (InterruptedException e) {
+                    LOG.error(e);
+                }
+            }
         }
 
         if (State.SOLVING == this.state) {
             this.state = State.NO_SOLUTION;
         }
 
-        LOG.debug(this);
+        LOG.trace(this);
+    }
+
+    private void submitTasks(int nTasks) {
+        for (int i = 0; i < nTasks; i++) {
+            taskCounter.incrementAndGet();
+            executor.submit(this::doWork);
+        }
+    }
+
+    private void doWork() {
+        final Node node = nodes.pollLast();
+        try {
+            if (null != node) {
+                solve(node);
+            }
+        } finally {
+            taskCounter.decrementAndGet();
+            synchronized (this) {
+                this.notify();
+            }
+        }
     }
 
     private void solve(Node node) {
+        synchronized (this) {
+            this.iterations++;
+        }
         node.lp.setPrecision(this.precision);
         node.solve();
 
@@ -244,9 +293,11 @@ public class BnB extends GeneralLP implements Solver {
 
         // case 2
         if (isFeasible(node.lp.x)) {
-            this.state = State.SOLVED;
-            this.objective = node.lp.objective; // incumbent
-            System.arraycopy(node.lp.x, 0, this.x, 0, n);
+            synchronized (this) {
+                this.state = State.SOLVED;
+                this.objective = node.lp.objective; // incumbent
+                System.arraycopy(node.lp.x, 0, this.x, 0, n);
+            }
             LOG.debug(node, "prune", "incumbent", this.objective);
             return;
         }
@@ -258,10 +309,11 @@ public class BnB extends GeneralLP implements Solver {
             } else {
                 branch(node);
             }
+            this.submitTasks(2);
         }
     }
 
-    private boolean betterOrEq(double z) {
+    private synchronized boolean betterOrEq(double z) {
         if (objectiveType.isMax()) {
             return objective >= z;
         } else {
