@@ -274,7 +274,9 @@ public class BnB extends GeneralLP implements Solver {
 
         // if the LP relaxation unbounded
         if (State.UNBOUNDED == node.lp.state) {
-            this.state = State.UNBOUNDED;
+            synchronized (this) {
+                this.state = State.UNBOUNDED;
+            }
             LOG.debug(node, "prune", node.lp.state);
             return;
         }
