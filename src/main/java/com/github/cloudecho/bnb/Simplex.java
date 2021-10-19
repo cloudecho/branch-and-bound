@@ -399,7 +399,7 @@ public class Simplex implements Solver {
             if (maxCount < counts[which]) {
                 maxCount = counts[which];
             }
-            return (reached >= 0.75 * size) || (maxCount >= size * CYCLING_THRESHOLD);
+            return (reached >= size / 2) || (maxCount >= 10 * CYCLING_THRESHOLD);
         }
 
         void reset() {
