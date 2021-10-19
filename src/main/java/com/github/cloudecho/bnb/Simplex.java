@@ -303,8 +303,6 @@ public class Simplex implements Solver {
             return this.driveAvars();
         }
 
-        this.iterations++;
-
         // w enter base
         int r = indexOfMinRatio(w);
         // not found, i.e. each of table[][w] <=0, unbounded
@@ -320,6 +318,7 @@ public class Simplex implements Solver {
             return false;
         }
 
+        this.iterations++;
         pivot(r, w);
         LOG.trace(this);
 
