@@ -7,6 +7,8 @@ import java.util.Arrays;
 public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
     protected final BigDecimal[][] table;
 
+    protected MathContext mathContext = MathContext.DECIMAL128;
+
     public BigDecimalMatrix(int m, int n) {
         super(m, n);
         table = new BigDecimal[m][];
@@ -30,8 +32,10 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
         }
     }
 
-    protected MathContext mathContext() {
-        return MathContext.DECIMAL128;
+    public void mathContext(MathContext mathContext) {
+        if (mathContext != null) {
+            this.mathContext = mathContext;
+        }
     }
 
     @Override
@@ -65,9 +69,9 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
 
             // for each element in this row
             for (int j = 0; j <= n2; j++) {
-                BigDecimal v2 = v.multiply(table[r][j], mathContext())
-                        .negate(mathContext())
-                        .add(table[i][j], mathContext());
+                BigDecimal v2 = v.multiply(table[r][j], mathContext)
+                        .negate(mathContext)
+                        .add(table[i][j], mathContext);
                 table[i][j] = v2;
             }
         }
@@ -81,7 +85,7 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
         }
 
         for (int j = 0; j <= n2; j++) {
-            table[r][j] = table[r][j].divide(v, mathContext());
+            table[r][j] = table[r][j].divide(v, mathContext);
         }
     }
 
@@ -105,12 +109,12 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
 
     @Override
     public void negate(int r, int c) {
-        table[r][c] = table[r][c].negate(mathContext());
+        table[r][c] = table[r][c].negate(mathContext);
     }
 
     @Override
     public BigDecimal divide(int r1, int c1, int r2, int c2) {
-        return table[r1][c1].divide(table[r2][c2], mathContext());
+        return table[r1][c1].divide(table[r2][c2], mathContext);
     }
 
     @Override
