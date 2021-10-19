@@ -105,7 +105,7 @@ public class GeneralLP implements Solver {
         LOG.trace(this);
         standardize();
 
-        Simplex simplex = new Simplex(c2, a2, b);
+        Simplex simplex = SimplexFactory.newSimplex(c2, a2, b); //new Simplex
         simplex.setPrecision(this.precision);
         simplex.solve();
 

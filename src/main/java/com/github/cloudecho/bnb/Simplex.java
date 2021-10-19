@@ -45,7 +45,7 @@ public class Simplex implements Solver {
 
     private final int m;
     private final int n;
-    private final Matrix matrix; // double[m+1][n+1+m]
+    private final Matrix<?> matrix; // double[m+1][n+1+m]
     private final int[] base; // int[m]
 
     /**
@@ -67,7 +67,7 @@ public class Simplex implements Solver {
      * @param a The matrix A, m rows, n columns
      * @param b The vector b, m rows, 1 column
      */
-    public Simplex(double[] c, double[][] a, double[] b) {
+    protected Simplex(double[] c, double[][] a, double[] b) {
         this.m = a.length;
         this.n = a[0].length;
 
@@ -101,7 +101,7 @@ public class Simplex implements Solver {
         this.matrix.endColumn(n);
     }
 
-    protected Matrix createMatrix(double[][] table) {
+    protected Matrix<?> createMatrix(double[][] table) {
         return new DoubleMatrix(table);
     }
 
@@ -218,13 +218,13 @@ public class Simplex implements Solver {
 
         // for each row, except 0-th
         for (int i = 1; i <= m; i++) {
-            double b = matrix.get(i, n).doubleValue();
-            if (b > 0d || b == 0d && matrix.existsPositiveInRow(i, n)) {
+            // Number b = matrix.get(i, n)
+            if (matrix.isPositive(i, n) || matrix.isZero(i, n) && matrix.existsPositiveInRow(i, n)) {
                 continue;
             }
             // b < 0d || no positive number in this row
             for (int j = 0; j <= n; j++) {
-                matrix.negative(i, j);
+                matrix.negate(i, j);
             }
         }
     }
@@ -310,11 +310,10 @@ public class Simplex implements Solver {
      */
     private boolean pivot() {
         final int w = indexOfMaxc();
-        final Number maxc = matrix.get(0, w);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("iter=" + iterations, "e=" + w, "maxc=" + Maths.round(maxc, precision));
+            LOG.debug("iter=" + iterations, "e=" + w, "maxc=" + Maths.round(matrix.get(0, w), precision));
         }
-        if (maxc.doubleValue() <= 0d) {
+        if (matrix.nonPositive(0, w)) {
             return this.driveAvars();
         }
 
@@ -430,14 +429,13 @@ public class Simplex implements Solver {
     }
 
     private int indexOfMaxc() {
-        double maxc = matrix.get(0, 0).doubleValue();
+//        Number maxc = matrix.get(0, 0);
         int w = 0;
         for (int j = 1; j < n2(); j++) {
             if (n == j) { // b column
                 continue;
             }
-            if (maxc < matrix.get(0, j).doubleValue()) {
-                maxc = matrix.get(0, j).doubleValue();
+            if (matrix.compare(0, w, 0, j) < 0) {
                 w = j;
             }
         }
@@ -503,7 +501,8 @@ public class Simplex implements Solver {
 
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder("Simplex {");
+        StringBuilder b = new StringBuilder(getClass().getSimpleName());
+        b.append('{');
         b.append("m=").append(m).append(' ');
         b.append("n=").append(n).append(' ');
         b.append("max=").append(max);

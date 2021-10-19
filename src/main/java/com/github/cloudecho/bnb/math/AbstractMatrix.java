@@ -1,6 +1,6 @@
 package com.github.cloudecho.bnb.math;
 
-public abstract class AbstractMatrix implements Matrix {
+public abstract class AbstractMatrix<T extends Number> implements Matrix<T> {
     public final int m;
     public final int n;
 

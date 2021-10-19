@@ -1,7 +1,7 @@
 package com.github.cloudecho.bnb.math;
 
-public interface Matrix {
-    Number get(int r, int c);
+public interface Matrix<T extends Number> {
+    T get(int r, int c);
 
     void set(int r, int c, Number num);
 
@@ -29,13 +29,13 @@ public interface Matrix {
 
     void decEndColumn();
 
-    void negative(int r, int c);
+    void negate(int r, int c);
 
-    Number divide(int r1, int c1, int r2, int c2);
+    T divide(int r1, int c1, int r2, int c2);
 
-    boolean existsPositiveInRow(int r, int endIndex) ;
+    boolean existsPositiveInRow(int r, int endIndex);
 
-    boolean existsNonZeroInRow(int r, int endIndex) ;
+    boolean existsNonZeroInRow(int r, int endIndex);
 
     boolean isPositive(int r, int c);
 
@@ -54,4 +54,6 @@ public interface Matrix {
     default boolean nonZero(int r, int c) {
         return !isZero(r, c);
     }
+
+    int compare(int r1, int c1, int r2, int c2);
 }

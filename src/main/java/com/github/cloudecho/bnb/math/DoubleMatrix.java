@@ -1,6 +1,6 @@
 package com.github.cloudecho.bnb.math;
 
-public class DoubleMatrix extends AbstractMatrix {
+public class DoubleMatrix extends AbstractMatrix<Double> {
     protected final double[][] table;
 
     public DoubleMatrix(int m, int n) {
@@ -80,7 +80,7 @@ public class DoubleMatrix extends AbstractMatrix {
     }
 
     @Override
-    public void negative(int r, int c) {
+    public void negate(int r, int c) {
         table[r][c] *= -1;
     }
 
@@ -120,5 +120,10 @@ public class DoubleMatrix extends AbstractMatrix {
             }
         }
         return false;
+    }
+
+    @Override
+    public int compare(int r1, int c1, int r2, int c2) {
+        return Double.compare(table[r1][c1], table[r2][c2]);
     }
 }

@@ -21,7 +21,7 @@ public class SimplexTest {
         };
         double[] b = {60, 32, 43, -86};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         double[] x = simplex.getX();
@@ -44,7 +44,7 @@ public class SimplexTest {
         };
         double[] b = {-60, -32, -43, 86};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         Assert.assertEquals("state", State.NO_SOLUTION, simplex.getState());
@@ -61,7 +61,7 @@ public class SimplexTest {
         };
         double[] b = {-0, -0, -0, 0};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         Assert.assertEquals("state", State.SOLVED, simplex.getState());
@@ -77,7 +77,7 @@ public class SimplexTest {
         };
         double[] b = {0, 0};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         Assert.assertEquals("state", State.UNBOUNDED, simplex.getState());
@@ -94,7 +94,7 @@ public class SimplexTest {
         };
         double[] b = {-0, -0, -0, 0};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         Assert.assertEquals("state", State.SOLVED, simplex.getState());
@@ -112,7 +112,7 @@ public class SimplexTest {
         };
         double[] b = {60, -32, -43, 86};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         Assert.assertEquals("state", State.NO_SOLUTION, simplex.getState());
@@ -128,7 +128,7 @@ public class SimplexTest {
         };
         double[] b = {2, 1, 1};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         double[] x = simplex.getX();
@@ -151,7 +151,7 @@ public class SimplexTest {
         };
         double[] b = {3, 1, 1, 1};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         double[] x = simplex.getX();
@@ -175,7 +175,7 @@ public class SimplexTest {
         };
         double[] b = {10, 20, 30};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         double[] x = simplex.getX();
@@ -198,7 +198,7 @@ public class SimplexTest {
         };
         double[] b = {10, 20, 30};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         double[] x = simplex.getX();
@@ -223,7 +223,7 @@ public class SimplexTest {
         };
         double[] b = {3, 1, 1, 0.5};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         double[] x = simplex.getX();
@@ -243,7 +243,7 @@ public class SimplexTest {
         };
         double[] b = {4, 1, 1, 1, 1};
 
-        Simplex simplex = new Simplex(c, a, b);
+        Simplex simplex = SimplexFactory.newSimplex(c, a, b);
         simplex.solve();
 
         double[] x = simplex.getX();
