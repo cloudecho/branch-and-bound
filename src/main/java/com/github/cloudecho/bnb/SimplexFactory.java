@@ -18,8 +18,8 @@ public class SimplexFactory {
         }
     }
 
-    public static final String SIMPLE_TYPE_PROP = "com.github.cloudecho.bnb.SIMPLE_TYPE";
-    static final SimplexType SIMPLEX_TYPE = SimplexType.of(System.getProperty(SIMPLE_TYPE_PROP, ""));
+    public static final String SIMPLEX_TYPE_PROP = "com.github.cloudecho.bnb.SIMPLEX_TYPE";
+    static final SimplexType SIMPLEX_TYPE = SimplexType.of(System.getProperty(SIMPLEX_TYPE_PROP, ""));
 
     public static Simplex newSimplex(double[] c, double[][] a, double[] b) {
         return newSimplex(SIMPLEX_TYPE, c, a, b);
