@@ -14,6 +14,10 @@ public class Maths {
         return Math.round(value * scale) / scale;
     }
 
+    public static double round(Number value, int precision) {
+        return round(value.doubleValue(), precision);
+    }
+
     public static final int[] EMPTY_INT_ARRAY = new int[0];
     public static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
 

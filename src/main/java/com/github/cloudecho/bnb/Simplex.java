@@ -1,5 +1,7 @@
 package com.github.cloudecho.bnb;
 
+import com.github.cloudecho.bnb.math.DoubleMatrix;
+import com.github.cloudecho.bnb.math.Matrix;
 import com.github.cloudecho.bnb.util.Log;
 import com.github.cloudecho.bnb.util.LogFactory;
 import com.github.cloudecho.bnb.util.Maths;
@@ -43,11 +45,8 @@ public class Simplex implements Solver {
 
     private final int m;
     private final int n;
-    private final double[][] table; // double[m+1][n+1]
+    private final Matrix matrix; // double[m+1][n+1+m]
     private final int[] base; // int[m]
-
-    private int m2;
-    private int n2;
 
     /**
      * Objective = max
@@ -71,8 +70,6 @@ public class Simplex implements Solver {
     public Simplex(double[] c, double[][] a, double[] b) {
         this.m = a.length;
         this.n = a[0].length;
-        this.m2 = m;
-        this.n2 = n;
 
         this.cycling = new C[n];
         this.initCycling();
@@ -87,17 +84,25 @@ public class Simplex implements Solver {
 
         this.x = new double[n];
         this.base = new int[m];
-        this.table = new double[m + 1][];
+        final double[][] table = new double[m + 1][];
         final int maxCols = n + 1 + m; // m aVars reserved
 
         // table[0]
-        this.table[0] = Arrays.copyOf(c, maxCols);
+        table[0] = Arrays.copyOf(c, maxCols);
 
         // table[1..m+1]
         for (int i = 1; i <= m; i++) { // for each row
-            this.table[i] = Arrays.copyOf(a[i - 1], maxCols);
-            this.table[i][n] = b[i - 1];
+            table[i] = Arrays.copyOf(a[i - 1], maxCols);
+            table[i][n] = b[i - 1];
         }
+
+        this.matrix = createMatrix(table);
+        this.matrix.endRow(m);
+        this.matrix.endColumn(n);
+    }
+
+    protected Matrix createMatrix(double[][] table) {
+        return new DoubleMatrix(table);
     }
 
     static final String MAX_ITERATIONS_PROP = "com.github.cloudecho.bnb.MAX_ITERATIONS";
@@ -146,7 +151,7 @@ public class Simplex implements Solver {
     private boolean pivotOnNegative() {
         boolean goOn = false;
         for (int i = 1; i <= m; i++) {
-            if (table[i][n] >= 0) {
+            if (matrix.nonNegative(i, n)) {
                 continue;
             }
             // pivot on negative number
@@ -155,13 +160,13 @@ public class Simplex implements Solver {
                 continue;
             }
 
-            if (cycling[i].inc(table[i][n])) {
+            if (cycling[i].inc(matrix.get(i, n))) {
                 LOG.debug("cycling2 detected", '(', i, j, ')');
                 this.state = State.NO_SOLUTION;
                 return false; // cycling
             }
 
-            LOG.debug("iter", iterations, "pivot (", i, j, ") on negative", table[i][j], 'b', table[i][n]);
+            LOG.debug("iter", iterations, "pivot (", i, j, ") on negative", matrix.get(i, j), 'b', matrix.get(i, n));
             this.iterations++;
             goOn = true;
             pivot(i, j);
@@ -174,10 +179,10 @@ public class Simplex implements Solver {
         double minr = 0;
         int w = -1; // not found
         for (int j = 0; j < n; j++) {
-            if (table[r][j] >= 0 || Maths.contains(base, j)) {
+            if (matrix.nonNegative(r, j) || Maths.contains(base, j)) {
                 continue;
             }
-            final double ratio = table[0][j] / table[r][j];
+            final double ratio = matrix.divide(0, j, r, j).doubleValue();
             if (minr > ratio || -1 == w) {
                 minr = ratio;
                 w = j;
@@ -192,10 +197,10 @@ public class Simplex implements Solver {
     }
 
     private void setXnMax() {
-        this.max = Maths.round(-table[0][n], precision);
+        this.max = Maths.round(-matrix.get(0, n).doubleValue(), precision);
 
-        for (int i = 0; i < m2; i++) {
-            double b = Maths.round(table[i + 1][n], precision); // b
+        for (int i = 0; i < m2(); i++) {
+            double b = Maths.round(matrix.get(i + 1, n), precision); // b
             int j = base[i];
             if (j > n || b < 0) { // aVar || not feasible
                 this.state = State.NO_SOLUTION;
@@ -213,33 +218,15 @@ public class Simplex implements Solver {
 
         // for each row, except 0-th
         for (int i = 1; i <= m; i++) {
-            double b = table[i][n];
-            if (b > 0d || b == 0d && existsPositiveNum(table[i], n)) {
+            double b = matrix.get(i, n).doubleValue();
+            if (b > 0d || b == 0d && matrix.existsPositiveInRow(i, n)) {
                 continue;
             }
             // b < 0d || no positive number in this row
             for (int j = 0; j <= n; j++) {
-                table[i][j] *= -1;
+                matrix.negative(i, j);
             }
         }
-    }
-
-    private boolean existsPositiveNum(double[] data, int endIndex) {
-        for (int i = 0; i < endIndex; i++) {
-            if (data[i] > 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean existsNonZeroNum(double[] data, int endIndex) {
-        for (int i = 0; i < endIndex; i++) {
-            if (data[i] != 0) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -255,7 +242,7 @@ public class Simplex implements Solver {
             if (w > -1 && base[w] < 0) {
                 base[w] = j; // j is selected
                 vars[j] = -1; // mark selected
-                gaussian(w + 1, j);
+                matrix.gaussian(w + 1, j);
                 count++;
             }
         }
@@ -272,7 +259,7 @@ public class Simplex implements Solver {
                 LOG.trace("base", 'r', r, "var", j);
                 base[r - 1] = j;
                 // vars[j] = -1; // mark selected
-                gaussian(r, j);
+                matrix.gaussian(r, j);
                 count++;
             }
         }
@@ -285,52 +272,15 @@ public class Simplex implements Solver {
         if (nAvars == 0) {
             return;
         }
-        n2 = n;
+        matrix.endColumn(n);
         for (int i = 0; i < m; i++) {
             if (base[i] >= 0) {
                 continue;
             }
-            ++n2;
-            LOG.trace("base", 'i', i, "aVar", n2);
-            base[i] = n2;
-            table[i + 1][n2] = 1;
-        }
-    }
-
-    private void gaussian(final int r, final int c) {
-        double v = table[r][c];
-        if (0d == v) {
-            return;
-        }
-
-        normalize(r, c);
-
-        // for each row except r-th
-        for (int i = 0; i <= m2; i++) {
-            if (r == i) {
-                continue;
-            }
-            v = table[i][c];
-            if (0d == v) {
-                continue;
-            }
-
-            // for each element in this row
-            for (int j = 0; j <= n2; j++) {
-                double v2 = -v * table[r][j] + table[i][j];
-                table[i][j] = Double.isNaN(v2) ? 0 : v2;
-            }
-        }
-    }
-
-    private void normalize(final int r, final int c) {
-        final double v = table[r][c];
-        if (1d == v || 0d == v) {
-            return;
-        }
-
-        for (int j = 0; j <= n2; j++) {
-            table[r][j] /= v;
+            matrix.incEndColumn();
+            LOG.trace("base", 'i', i, "aVar", n2());
+            base[i] = n2();
+            matrix.set(i + 1, n2(), 1d);
         }
     }
 
@@ -345,8 +295,8 @@ public class Simplex implements Solver {
     private int baseVar(int j) {
         int w = -1;
         int count = 0;
-        for (int i = 1; i <= m2 && count < 2; i++) {
-            if (table[i][j] > 0d) {
+        for (int i = 1; i <= m2() && count < 2; i++) {
+            if (matrix.isPositive(i, j)) {
                 count++;
                 w = i - 1;
             }
@@ -360,11 +310,11 @@ public class Simplex implements Solver {
      */
     private boolean pivot() {
         final int w = indexOfMaxc();
-        final double maxc = table[0][w];
+        final Number maxc = matrix.get(0, w);
         if (LOG.isDebugEnabled()) {
             LOG.debug("iter=" + iterations, "e=" + w, "maxc=" + Maths.round(maxc, precision));
         }
-        if (maxc <= 0) {
+        if (maxc.doubleValue() <= 0d) {
             return this.driveAvars();
         }
 
@@ -379,7 +329,7 @@ public class Simplex implements Solver {
         }
 
         // detect cycling
-        if (w < n && cycling[w].inc(table[r][n])) {
+        if (w < n && cycling[w].inc(matrix.get(r, n))) {
             LOG.debug("cycling detected", '(', r, w, ')');
             this.state = State.NO_SOLUTION;
             return false;
@@ -392,7 +342,7 @@ public class Simplex implements Solver {
     }
 
     private void pivot(int r, int c) {
-        gaussian(r, c);
+        matrix.gaussian(r, c);
         base[r - 1] = c;
     }
 
@@ -401,12 +351,12 @@ public class Simplex implements Solver {
      */
     private boolean driveAvars() {
         boolean goOn = false;
-        for (int r = 1; r <= m2; r++) {
+        for (int r = 1; r <= m2(); r++) {
             if (base[r - 1] < n) { // non-aVar
                 continue;
             }
             for (int j = 0; j < n; j++) {
-                if (0d == table[r][j] || (table[r][j] < 0d && table[r][n] > 0d)) {
+                if (matrix.isZero(r, j) || (matrix.isNegative(r, j) && matrix.isPositive(r, n))) {
                     continue;
                 }
                 LOG.debug("driving aVar", base[r - 1]);
@@ -419,23 +369,23 @@ public class Simplex implements Solver {
         if (!goOn) {
             removeZeroRow();
         }
-        this.n2 = n; // discard aVars
+        matrix.endColumn(n); // discard aVars
         return goOn;
     }
 
     private void removeZeroRow() {
-        for (int r = 1; r <= m2; r++) {
+        for (int r = 1; r <= m2(); r++) {
             if (base[r - 1] < n) { // non-aVar
                 continue;
             }
-            if (!existsNonZeroNum(table[r], n + 1)) {
+            if (!matrix.existsNonZeroInRow(r, n + 1)) {
                 // remove r-th row
-                for (int i = r; i < m2; i++) {
-                    table[i] = table[i + 1];
+                for (int i = r; i < m2(); i++) {
+                    matrix.setRow(i, matrix.getRow(i + 1));
                     base[i - 1] = base[i];
                 }
-                base[m2 - 1] = -1;
-                this.m2--;
+                base[m2() - 1] = -1;
+                matrix.decEndRow();
                 LOG.debug("removeZeroRow", r);
             }
         }
@@ -448,7 +398,7 @@ public class Simplex implements Solver {
         int count = 0;
         double v = 0d;
 
-        boolean inc(final double v) {
+        boolean inc(final Number v) {
             if (0 == count) {
                 count++;
                 this.v = Maths.round(v, precision);
@@ -480,14 +430,14 @@ public class Simplex implements Solver {
     }
 
     private int indexOfMaxc() {
-        double maxc = table[0][0];
+        double maxc = matrix.get(0, 0).doubleValue();
         int w = 0;
-        for (int j = 1; j < n2; j++) {
+        for (int j = 1; j < n2(); j++) {
             if (n == j) { // b column
                 continue;
             }
-            if (maxc < table[0][j]) {
-                maxc = table[0][j];
+            if (maxc < matrix.get(0, j).doubleValue()) {
+                maxc = matrix.get(0, j).doubleValue();
                 w = j;
             }
         }
@@ -497,12 +447,12 @@ public class Simplex implements Solver {
     private int indexOfMinRatio(int c) {
         double minv = 0;
         int w = -1;
-        for (int i = 1; i <= m2; i++) {
-            double v = table[i][c];
-            if (v <= 0d) {
+        for (int i = 1; i <= m2(); i++) {
+            // double v = matrix.get(i, c);
+            if (matrix.nonPositive(i, c)) {
                 continue;
             }
-            v = table[i][n] / v; // i.e. b/v
+            double v = matrix.divide(i, n, i, c).doubleValue(); // i.e. b/a(i,c)
             if (minv > v || -1 == w) {
                 minv = v;
                 w = i;
@@ -565,11 +515,11 @@ public class Simplex implements Solver {
 
         // table
         b.append('\n').append(" [  ");
-        for (int j = 0; j <= n2; j++) {
+        for (int j = 0; j <= n2(); j++) {
             b.append(n == j ? " |  " : ' ');
             b.append(String.format("%-9d", j));
         }
-        for (int i = 0; i <= m2; i++) {
+        for (int i = 0; i <= m2(); i++) {
             // end line
             b.append('\n');
 
@@ -584,16 +534,24 @@ public class Simplex implements Solver {
             // row number
             b.append(String.format("%3d:", i));
             // print table[i]
-            for (int j = 0; j <= n2; j++) {
+            for (int j = 0; j <= n2(); j++) {
                 if (n == j) {
                     b.append(" | ");
                 }
                 b.append((i > 0 && j == base[i - 1]) ? '*' : ' '); // base var
-                b.append(String.format("%-8.3f", table[i][j])).append(' ');
+                b.append(String.format("%-8.3f", matrix.get(i, j).doubleValue())).append(' ');
             }
         }
         b.setCharAt(b.length() - 1, ']');
 
         return b.append('\n').append('}').toString();
+    }
+
+    protected int m2() {
+        return matrix.endRow();
+    }
+
+    protected int n2() {
+        return matrix.endColumn();
     }
 }
