@@ -71,8 +71,7 @@ public class Simplex implements Solver {
         this.m = a.length;
         this.n = a[0].length;
 
-        this.cycling = new C[n];
-        this.initCycling();
+        this.cycling = new C(n);
 
         // check length
         if (m != b.length) {
@@ -105,16 +104,13 @@ public class Simplex implements Solver {
         return new DoubleMatrix(table);
     }
 
-    static final String MAX_ITERATIONS_PROP = "com.github.cloudecho.bnb.MAX_ITERATIONS";
-    static final int MAX_ITERATIONS = Integer.parseInt(System.getProperty(MAX_ITERATIONS_PROP, "1000000")); // 1 million
-
     private int iterations = 0;
     private State state = State.ZERO;
 
     @Override
     public void solve() {
         this.state = State.SOLVING;
-        this.resetCycling();
+        this.cycling.reset();
         this.preprocess();
         LOG.trace("preprocess", this);
 
@@ -122,20 +118,10 @@ public class Simplex implements Solver {
         LOG.debug("success to init base");
         LOG.trace(this);
 
-        while (this.pivot()) {
-            if (iterations > MAX_ITERATIONS) {
-                this.state = State.NO_SOLUTION;
-                break;
-            }
-        }
+        while (this.pivot()) ;
         if (State.SOLVING == this.state) {
-            this.resetCycling();
-            while (this.pivotOnNegative()) {
-                if (iterations > MAX_ITERATIONS) {
-                    this.state = State.NO_SOLUTION;
-                    break;
-                }
-            }
+            this.cycling.reset();
+            while (this.pivotOnNegative()) ;
         }
         this.setXnMax();
         if (State.SOLVING == this.state) {
@@ -160,7 +146,7 @@ public class Simplex implements Solver {
                 continue;
             }
 
-            if (cycling[i].inc(matrix.get(i, n))) {
+            if (cycling.inc(i)) {
                 LOG.debug("cycling2 detected", '(', i, j, ')');
                 this.state = State.NO_SOLUTION;
                 return false; // cycling
@@ -328,7 +314,7 @@ public class Simplex implements Solver {
         }
 
         // detect cycling
-        if (w < n && cycling[w].inc(matrix.get(r, n))) {
+        if (w < n && cycling.inc(w)) {
             LOG.debug("cycling detected", '(', r, w, ')');
             this.state = State.NO_SOLUTION;
             return false;
@@ -391,40 +377,35 @@ public class Simplex implements Solver {
     }
 
     private static final String CYCLING_THRESHOLD_PROP = "com.github.cloudecho.bnb.CYCLING_THRESHOLD";
-    private static final int CYCLING_THRESHOLD = Integer.parseInt(System.getProperty(CYCLING_THRESHOLD_PROP, "10"));
+    private static final int CYCLING_THRESHOLD = Integer.parseInt(System.getProperty(CYCLING_THRESHOLD_PROP, "5"));
 
-    private class C {
-        int count = 0;
-        double v = 0d;
+    private final C cycling;
 
-        boolean inc(final Number v) {
-            if (0 == count) {
-                count++;
-                this.v = Maths.round(v, precision);
-            } else if (Maths.round(v, precision) == this.v) {
-                count++;
+    private static class C {
+        final int[] counts;
+        final int size;
+        int maxCount = 0;
+        int reached = 0;
+
+        C(int size) {
+            this.size = size;
+            this.counts = new int[size];
+        }
+
+        boolean inc(final int which) {
+            if (++counts[which] == CYCLING_THRESHOLD) {
+                reached++;
             }
-
-            return count >= CYCLING_THRESHOLD;
+            if (maxCount < counts[which]) {
+                maxCount = counts[which];
+            }
+            return (reached >= 0.75 * size) || (maxCount >= size * CYCLING_THRESHOLD);
         }
 
         void reset() {
-            count = 0;
-            v = 0d;
-        }
-    }
-
-    private final C[] cycling;
-
-    private void initCycling() {
-        for (int i = 0; i < n; i++) {
-            cycling[i] = new C();
-        }
-    }
-
-    private void resetCycling() {
-        for (int i = 0; i < n; i++) {
-            cycling[i].reset();
+            maxCount = 0;
+            reached = 0;
+            Arrays.fill(counts, 0);
         }
     }
 

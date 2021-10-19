@@ -14,9 +14,7 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
         table = new BigDecimal[m][];
 
         table[0] = new BigDecimal[n];
-        for (int j = 0; j < n; j++) {
-            table[0][j] = BigDecimal.ZERO;
-        }
+        Arrays.fill(table[0], BigDecimal.ZERO);
         for (int i = 1; i < m; i++) {
             table[i] = Arrays.copyOf(table[0], n);
         }
