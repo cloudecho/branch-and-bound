@@ -83,25 +83,22 @@ public class Simplex implements Solver {
 
         this.x = new double[n];
         this.base = new int[m];
-        final double[][] table = new double[m + 1][];
-        final int maxCols = n + 1 + m; // m aVars reserved
+        final double[][] table = new double[m + 1][n + 1];
 
         // table[0]
-        table[0] = Arrays.copyOf(c, maxCols);
+        table[0] = Arrays.copyOf(c, n + 1);
 
         // table[1..m+1]
         for (int i = 1; i <= m; i++) { // for each row
-            table[i] = Arrays.copyOf(a[i - 1], maxCols);
+            table[i] = Arrays.copyOf(a[i - 1], n + 1);
             table[i][n] = b[i - 1];
         }
 
-        this.matrix = createMatrix(table);
-        this.matrix.setRows(m + 1);
-        this.matrix.setColumns(n + 1);
+        this.matrix = createMatrix(table, n + 1 + m); // m aVars reserved
     }
 
-    protected Matrix<?> createMatrix(double[][] table) {
-        return new DoubleMatrix(table);
+    protected Matrix<?> createMatrix(double[][] table, int max_n) {
+        return new DoubleMatrix(table, max_n);
     }
 
     private int iterations = 0;

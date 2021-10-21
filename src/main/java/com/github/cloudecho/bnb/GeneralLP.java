@@ -64,7 +64,7 @@ public class GeneralLP implements Solver {
      * @param c0            c0
      * @param c             The coefficient vector C, 1 row, n columns
      * @param a             The matrix A, m rows, n columns
-     * @param signs         List of sign (&lt;=, &gt;=, =). <br>
+     * @param signs         List of sign (&le;, &ge;, =). <br>
      *                      e.g. [EQ, GE, LE] represents A1*X = b1, A2*X >= b2, A3*X <= b3.
      * @param b             The vector b, m rows, 1 column
      * @param freeVars      unrestricted variables, var starts from 1. <br>

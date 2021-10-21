@@ -1,18 +1,13 @@
 package com.github.cloudecho.bnb.math;
 
+import java.util.Arrays;
+
 public class DoubleMatrix extends AbstractMatrix<Double> {
     protected final double[][] table;
 
-    public DoubleMatrix(double[][] table) {
-        super(rows(table), table[0].length);
+    public DoubleMatrix(double[][] table, int max_n) {
+        super(table, max_n);
         this.table = table;
-    }
-
-    static int rows(double[][] table) {
-        if (null == table || table.length < 1) {
-            throw new IllegalArgumentException("the rows of table < 1");
-        }
-        return table.length;
     }
 
     @Override
@@ -120,5 +115,15 @@ public class DoubleMatrix extends AbstractMatrix<Double> {
     @Override
     public int compare(int r1, int c1, int r2, int c2) {
         return Double.compare(table[r1][c1], table[r2][c2]);
+    }
+
+    protected void extendColumn() {
+        if (growColumn(n - table[0].length) <= 0) {
+            return;
+        }
+
+        for (int i = 0; i < m; i++) {
+            table[i] = Arrays.copyOf(table[i], n2);
+        }
     }
 }

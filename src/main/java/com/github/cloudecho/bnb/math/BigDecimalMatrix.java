@@ -2,14 +2,14 @@ package com.github.cloudecho.bnb.math;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.util.Arrays;
 
 public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
     protected final BigDecimal[][] table;
-
     protected MathContext mathContext = MathContext.DECIMAL128;
 
-    public BigDecimalMatrix(double[][] table) {
-        super(DoubleMatrix.rows(table), table[0].length);
+    public BigDecimalMatrix(double[][] table, int max_n) {
+        super(table, max_n);
         this.table = new BigDecimal[m][n];
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
@@ -141,5 +141,16 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
     @Override
     public int compare(int r1, int c1, int r2, int c2) {
         return table[r1][c1].compareTo(table[r2][c2]);
+    }
+
+    protected void extendColumn() {
+        final int fromIndex = n2;
+        if (growColumn(n - table[0].length) <= 0) {
+            return;
+        }
+        for (int i = 0; i < m; i++) {
+            table[i] = Arrays.copyOf(table[i], n2);
+            Arrays.fill(table[i], fromIndex, n2, BigDecimal.ZERO);
+        }
     }
 }

@@ -1,12 +1,12 @@
 package com.github.cloudecho.bnb;
 
-import com.github.cloudecho.bnb.math.BigDecimalMatrix;
 import com.github.cloudecho.bnb.math.Matrix;
+import com.github.cloudecho.bnb.math.RevisedDoubleMatrix;
 
 /**
- * BigDecimal version of Simplex
+ * Revised version of Simplex
  */
-public class BigSimplex extends Simplex {
+public class RevisedSimplex extends Simplex {
     /**
      * Constructor.
      *
@@ -14,12 +14,12 @@ public class BigSimplex extends Simplex {
      * @param a The matrix A, m rows, n columns
      * @param b The vector b, m rows, 1 column
      */
-    protected BigSimplex(double[] c, double[][] a, double[] b) {
+    protected RevisedSimplex(double[] c, double[][] a, double[] b) {
         super(c, a, b);
     }
 
     @Override
     protected Matrix<?> createMatrix(double[][] table, int max_n) {
-        return new BigDecimalMatrix(table, max_n);
+        return new RevisedDoubleMatrix(table, max_n);
     }
 }

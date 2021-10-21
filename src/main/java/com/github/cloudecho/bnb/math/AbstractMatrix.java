@@ -5,14 +5,24 @@ public abstract class AbstractMatrix<T extends Number> implements Matrix<T> {
     public final int max_n;
 
     /**
-     * End row
+     * The number of rows
      */
     protected int m;
 
     /**
-     * End column
+     * The number of columns
      */
     protected int n;
+
+    /**
+     * The number of physical columns. <br>
+     * n2 = n + nGrow;  n &le; n2 &le; max_n
+     */
+    protected int n2;
+
+    protected final int extend_n;
+
+    static final int DEFAULT_EXTEND_TIMES = 10;
 
     public AbstractMatrix(int max_m, int max_n) {
         if (max_m < 1) {
@@ -25,6 +35,24 @@ public abstract class AbstractMatrix<T extends Number> implements Matrix<T> {
         this.max_n = max_n;
         this.m = max_m;
         this.n = max_n;
+        this.n2 = n;
+        this.extend_n = 0;
+    }
+
+    public AbstractMatrix(double[][] table, int max_n) {
+        this.m = rows(table);
+        this.n = table[0].length;
+        this.max_m = m;
+        this.max_n = max_n;
+        this.n2 = n;
+        this.extend_n = (max_n > n) ? (max_n - n) : 0;
+    }
+
+    static int rows(double[][] table) {
+        if (null == table || table.length < 1) {
+            throw new IllegalArgumentException("number of rows < 1");
+        }
+        return table.length;
     }
 
     @Override
@@ -41,6 +69,32 @@ public abstract class AbstractMatrix<T extends Number> implements Matrix<T> {
             throw new IllegalArgumentException("column index out of range: " + n);
         }
         this.n = n;
+        this.extendColumn();
+    }
+
+    protected abstract void extendColumn();
+
+    protected int extendTimes() {
+        return DEFAULT_EXTEND_TIMES;
+    }
+
+    /**
+     * Return how many columns grows
+     */
+    protected int growColumn(int nDelta) {
+        if (extend_n == 0 || nDelta <= 0) {
+            return nDelta;
+        }
+        final int times = extendTimes();
+        for (int i = 1; i <= times; i++) {
+            int d = (int) Math.ceil(((double) i) * extend_n / times);
+            if (nDelta <= d) {
+                nDelta = d;
+                break;
+            }
+        }
+        this.n2 += nDelta;
+        return nDelta;
     }
 
     @Override
@@ -65,6 +119,7 @@ public abstract class AbstractMatrix<T extends Number> implements Matrix<T> {
         if (++n > max_n) {
             throw new IllegalStateException("exceed max columns: " + max_n);
         }
+        extendColumn();
     }
 
     @Override
@@ -79,5 +134,6 @@ public abstract class AbstractMatrix<T extends Number> implements Matrix<T> {
         if (--n < 0) {
             throw new IllegalStateException("negative column index");
         }
+        extendColumn();
     }
 }

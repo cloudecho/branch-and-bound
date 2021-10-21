@@ -6,7 +6,7 @@ public class SimplexFactory {
     }
 
     public enum SimplexType {
-        NORMAL, BIG;
+        NORMAL, BIG, REVISED;
 
         static SimplexType of(String name) {
             for (SimplexType t : values()) {
@@ -29,6 +29,8 @@ public class SimplexFactory {
         switch (t) {
             case BIG:
                 return new BigSimplex(c, a, b);
+            case REVISED:
+                return new RevisedSimplex(c, a, b);
             case NORMAL:
             default:
                 return new Simplex(c, a, b);
