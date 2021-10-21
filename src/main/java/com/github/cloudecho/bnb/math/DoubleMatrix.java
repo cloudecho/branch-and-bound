@@ -3,11 +3,6 @@ package com.github.cloudecho.bnb.math;
 public class DoubleMatrix extends AbstractMatrix<Double> {
     protected final double[][] table;
 
-    public DoubleMatrix(int m, int n) {
-        super(m, n);
-        this.table = new double[m][n];
-    }
-
     public DoubleMatrix(double[][] table) {
         super(rows(table), table[0].length);
         this.table = table;
@@ -50,7 +45,7 @@ public class DoubleMatrix extends AbstractMatrix<Double> {
         normalize(r, c);
 
         // for each row except r-th
-        for (int i = 0; i <= m2; i++) {
+        for (int i = 0; i < m; i++) {
             if (r == i) {
                 continue;
             }
@@ -60,7 +55,7 @@ public class DoubleMatrix extends AbstractMatrix<Double> {
             }
 
             // for each element in this row
-            for (int j = 0; j <= n2; j++) {
+            for (int j = 0; j < n; j++) {
                 double v2 = -v * table[r][j] + table[i][j];
                 table[i][j] = Double.isNaN(v2) ? 0 : v2;
             }
@@ -74,7 +69,7 @@ public class DoubleMatrix extends AbstractMatrix<Double> {
             return;
         }
 
-        for (int j = 0; j <= n2; j++) {
+        for (int j = 0; j < n; j++) {
             table[r][j] /= v;
         }
     }

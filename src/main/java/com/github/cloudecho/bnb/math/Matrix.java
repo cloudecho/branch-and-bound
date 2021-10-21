@@ -13,21 +13,25 @@ public interface Matrix<T extends Number> {
 
     void setRow(int r, Object rowData);
 
-    void endRow(int m2);
+    default void setRowTo(int r, int r2) {
+        setRow(r, getRow(r2));
+    }
 
-    void endColumn(int n2);
+    void setRows(int m);
 
-    int endRow();
+    void setColumns(int n);
 
-    int endColumn();
+    int getRows();
 
-    void incEndRow();
+    int getColumns();
 
-    void incEndColumn();
+    void increaseRows();
 
-    void decEndRow();
+    void increaseColumns();
 
-    void decEndColumn();
+    void decreaseRows();
+
+    void decreaseColumns();
 
     void negate(int r, int c);
 

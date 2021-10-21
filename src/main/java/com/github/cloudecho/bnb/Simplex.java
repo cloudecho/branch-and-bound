@@ -96,8 +96,8 @@ public class Simplex implements Solver {
         }
 
         this.matrix = createMatrix(table);
-        this.matrix.endRow(m);
-        this.matrix.endColumn(n);
+        this.matrix.setRows(m + 1);
+        this.matrix.setColumns(n + 1);
     }
 
     protected Matrix<?> createMatrix(double[][] table) {
@@ -258,12 +258,12 @@ public class Simplex implements Solver {
         if (nAvars == 0) {
             return;
         }
-        matrix.endColumn(n);
+        matrix.setColumns(n + 1);
         for (int i = 0; i < m; i++) {
             if (base[i] >= 0) {
                 continue;
             }
-            matrix.incEndColumn();
+            matrix.increaseColumns();
             LOG.trace("base", 'i', i, "aVar", n2());
             base[i] = n2();
             matrix.set(i + 1, n2(), 1d);
@@ -353,7 +353,7 @@ public class Simplex implements Solver {
         if (!goOn) {
             removeZeroRow();
         }
-        matrix.endColumn(n); // discard aVars
+        matrix.setColumns(n + 1); // discard aVars
         return goOn;
     }
 
@@ -365,11 +365,11 @@ public class Simplex implements Solver {
             if (!matrix.existsNonZeroInRow(r, n + 1)) {
                 // remove r-th row
                 for (int i = r; i < m2(); i++) {
-                    matrix.setRow(i, matrix.getRow(i + 1));
+                    matrix.setRowTo(i, i + 1);
                     base[i - 1] = base[i];
                 }
                 base[m2() - 1] = -1;
-                matrix.decEndRow();
+                matrix.decreaseRows();
                 LOG.debug("removeZeroRow", r);
             }
         }
@@ -527,10 +527,10 @@ public class Simplex implements Solver {
     }
 
     protected int m2() {
-        return matrix.endRow();
+        return matrix.getRows() - 1;
     }
 
     protected int n2() {
-        return matrix.endColumn();
+        return matrix.getColumns() - 1;
     }
 }

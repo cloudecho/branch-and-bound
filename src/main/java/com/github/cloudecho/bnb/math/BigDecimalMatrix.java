@@ -2,23 +2,11 @@ package com.github.cloudecho.bnb.math;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.util.Arrays;
 
 public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
     protected final BigDecimal[][] table;
 
     protected MathContext mathContext = MathContext.DECIMAL128;
-
-    public BigDecimalMatrix(int m, int n) {
-        super(m, n);
-        table = new BigDecimal[m][];
-
-        table[0] = new BigDecimal[n];
-        Arrays.fill(table[0], BigDecimal.ZERO);
-        for (int i = 1; i < m; i++) {
-            table[i] = Arrays.copyOf(table[0], n);
-        }
-    }
 
     public BigDecimalMatrix(double[][] table) {
         super(DoubleMatrix.rows(table), table[0].length);
@@ -56,7 +44,7 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
         normalize(r, c);
 
         // for each row except r-th
-        for (int i = 0; i <= m2; i++) {
+        for (int i = 0; i < m; i++) {
             if (r == i) {
                 continue;
             }
@@ -66,7 +54,7 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
             }
 
             // for each element in this row
-            for (int j = 0; j <= n2; j++) {
+            for (int j = 0; j < n; j++) {
                 BigDecimal v2 = v.multiply(table[r][j], mathContext)
                         .negate(mathContext)
                         .add(table[i][j], mathContext);
@@ -82,7 +70,7 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
             return;
         }
 
-        for (int j = 0; j <= n2; j++) {
+        for (int j = 0; j < n; j++) {
             table[r][j] = table[r][j].divide(v, mathContext);
         }
     }

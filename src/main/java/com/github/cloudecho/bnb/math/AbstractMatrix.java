@@ -1,82 +1,82 @@
 package com.github.cloudecho.bnb.math;
 
 public abstract class AbstractMatrix<T extends Number> implements Matrix<T> {
-    public final int m;
-    public final int n;
+    public final int max_m;
+    public final int max_n;
 
     /**
      * End row
      */
-    protected int m2;
+    protected int m;
 
     /**
      * End column
      */
-    protected int n2;
+    protected int n;
 
-    public AbstractMatrix(int m, int n) {
-        if (m < 0) {
-            throw new IllegalArgumentException("negative m: " + m);
+    public AbstractMatrix(int max_m, int max_n) {
+        if (max_m < 1) {
+            throw new IllegalArgumentException("zero or negative m: " + max_m);
         }
-        if (n < 0) {
-            throw new IllegalArgumentException("negative n: " + n);
+        if (max_n < 1) {
+            throw new IllegalArgumentException("zero or negative n: " + max_n);
+        }
+        this.max_m = max_m;
+        this.max_n = max_n;
+        this.m = max_m;
+        this.n = max_n;
+    }
+
+    @Override
+    public void setRows(int m) {
+        if (m < 0 || m > max_m) {
+            throw new IllegalArgumentException("row index out of range: " + m);
         }
         this.m = m;
+    }
+
+    @Override
+    public void setColumns(int n) {
+        if (n < 0 || n > max_n) {
+            throw new IllegalArgumentException("column index out of range: " + n);
+        }
         this.n = n;
-        this.m2 = m;
-        this.n2 = n;
     }
 
     @Override
-    public void endRow(int m2) {
-        if (m2 < 0 || m2 > m) {
-            throw new IllegalArgumentException("row index out of range: " + m2);
-        }
-        this.m2 = m2;
+    public int getRows() {
+        return m;
     }
 
     @Override
-    public void endColumn(int n2) {
-        if (n2 < 0 || n2 > n) {
-            throw new IllegalArgumentException("column index out of range: " + n2);
-        }
-        this.n2 = n2;
+    public int getColumns() {
+        return n;
     }
 
     @Override
-    public int endRow() {
-        return m2;
-    }
-
-    @Override
-    public int endColumn() {
-        return n2;
-    }
-
-    @Override
-    public void incEndRow() {
-        if (++m2 > m) {
-            throw new IllegalStateException("exceed max rows: " + m);
+    public void increaseRows() {
+        if (++m > max_m) {
+            throw new IllegalStateException("exceed max rows: " + max_m);
         }
     }
 
     @Override
-    public void incEndColumn() {
-        if (++n2 > n) {
-            throw new IllegalStateException("exceed max columns: " + n);
+    public void increaseColumns() {
+        if (++n > max_n) {
+            throw new IllegalStateException("exceed max columns: " + max_n);
         }
     }
 
     @Override
-    public void decEndRow() {
-        if (--m2 < 0) {
+    public void decreaseRows() {
+        if (--m < 0) {
             throw new IllegalStateException("negative row index");
         }
     }
 
     @Override
-    public void decEndColumn() {
-        if (--n2 < 0) {
+    public void decreaseColumns() {
+        if (--n < 0) {
             throw new IllegalStateException("negative column index");
         }
     }
