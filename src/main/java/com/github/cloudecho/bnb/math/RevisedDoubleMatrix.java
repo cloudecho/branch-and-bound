@@ -100,6 +100,9 @@ public class RevisedDoubleMatrix extends AbstractMatrix<Double> {
 
             // for each element in this row
             for (int j = 0; j < n; j++) {
+                if (j == c) {
+                    continue;
+                }
                 double v2 = -v * get(r, j) + get(i, j);
                 set(i, j, Double.isNaN(v2) ? 0 : v2);
             }
@@ -129,11 +132,12 @@ public class RevisedDoubleMatrix extends AbstractMatrix<Double> {
     public void negate(int r, int c) {
         final int i = identityColumn[c];
         if (i > 0) {
-            table[c] = new double[m];
-            if (i == r) {
+            if (i == r) { // 1
+                identityColumn[c] = -1;
+                table[c] = new double[m];
                 table[c][r] = -1d;
-                return;
-            }
+            } // else 0
+            return;
         }
         column(c)[r] *= -1d;
     }
