@@ -174,14 +174,12 @@ public class BnB extends GeneralLP implements Solver {
             lp.solve();
 
             // for binary var
-            Node n = this;
-            do {
+            for (Node n = this; n != null; n = n.parent) {
                 if (-1 == n.binVar) {
-                    break;
+                    continue;
                 }
                 this.lp.x[n.binVar - 1] = (LEFT == n.branch) ? 0d : 1d;
-                n = n.parent;
-            } while (n != null);
+            }
         }
 
         Node binary(int binVar) {
