@@ -303,14 +303,19 @@ public class BnB extends GeneralLP implements Solver {
         }
 
         // case 3: node.lp.x not feasible
-        if (!isLeaf(node)) {
-            if (node.level < nBinVars) {
-                branch01(node);
-            } else {
-                branch(node);
-            }
-            this.submitTasks(2);
+        createBranch(node);
+    }
+
+    private void createBranch(Node node) {
+        if (isLeaf(node)) {
+            return;
         }
+        if (node.level < nBinVars) {
+            branch01(node);
+        } else {
+            branch(node);
+        }
+        this.submitTasks(2);
     }
 
     private synchronized boolean betterOrEq(double z) {
@@ -336,15 +341,27 @@ public class BnB extends GeneralLP implements Solver {
         Sign[] signs1 = Maths.append(lp0.signs, Sign.LE);
         double[] b1 = Maths.append(lp0.b, cf.floor);
         GeneralLP lp1 = new GeneralLP(lp0.objectiveType, lp0.c0, lp0.c, a2, signs1, b1, lp0.freeVars);
+        Node child1 = new Node(lp1, parent, Node.LEFT);
+        if (cf.eq()) {
+            System.arraycopy(lp0.x, 0, lp1.x, 0, lp0.x.length);
+            createBranch(child1);
+        } else {
+            nodes.addLast(child1);
+        }
 
         // LP2: right branch (>= ceil)
         LOG.debug(parent, "right branch x(", v, ") >=", cf.ceil);
         Sign[] signs2 = Maths.append(lp0.signs, Sign.GE);
         double[] b2 = Maths.append(lp0.b, cf.ceil);
         GeneralLP lp2 = new GeneralLP(lp0.objectiveType, lp0.c0, lp0.c, a2, signs2, b2, lp0.freeVars);
+        Node child2 = new Node(lp2, parent, Node.RIGHT);
+        if (cf.eq()) {
+            System.arraycopy(lp0.x, 0, lp2.x, 0, lp0.x.length);
+            createBranch(child2);
+        } else {
+            nodes.addLast(child2);
+        }
 
-        nodes.addLast(new Node(lp1, parent, Node.LEFT));
-        nodes.addLast(new Node(lp2, parent, Node.RIGHT));
         parent.lp = null; // release memory
     }
 
@@ -354,6 +371,7 @@ public class BnB extends GeneralLP implements Solver {
     private void branch01(Node parent) {
         final GeneralLP lp0 = parent.lp;
         final int v = intVars[parent.level];
+        Maths.CnF cf = new Maths.CnF(lp0.x[v - 1]);
 
         double[][] a2 = Arrays.copyOf(lp0.a, lp0.m);
         double[] bLeft = lp0.b; // left branch
@@ -365,13 +383,25 @@ public class BnB extends GeneralLP implements Solver {
         // LP1: left branch (=0)
         LOG.debug(parent, "left branch x(", v, ") =", 0);
         GeneralLP lp1 = new GeneralLP(lp0.objectiveType, lp0.c0, c2, a2, lp0.signs, bLeft, lp0.freeVars);
+        Node child1 = new Node(lp1, parent, Node.LEFT).binary(v);
+        if (cf.eq(0)) {
+            System.arraycopy(lp0.x, 0, lp1.x, 0, lp0.x.length);
+            createBranch(child1);
+        } else {
+            nodes.addLast(child1);
+        }
 
         // LP2: right branch (=1)
         LOG.debug(parent, "right branch x(", v, ") =", 1);
         GeneralLP lp2 = new GeneralLP(lp0.objectiveType, c0Right, c2, a2, lp0.signs, bRight, lp0.freeVars);
+        Node child2 = new Node(lp2, parent, Node.RIGHT).binary(v);
+        if (cf.eq(1)) {
+            System.arraycopy(lp0.x, 0, lp2.x, 0, lp0.x.length);
+            createBranch(child2);
+        } else {
+            nodes.addLast(child2);
+        }
 
-        nodes.addLast(new Node(lp1, parent, Node.LEFT).binary(v));
-        nodes.addLast(new Node(lp2, parent, Node.RIGHT).binary(v));
         parent.lp = null; // release memory
     }
 
@@ -389,7 +419,7 @@ public class BnB extends GeneralLP implements Solver {
     }
 
     private boolean isLeaf(Node node) {
-        return node.level == intVars.length;
+        return node.level >= intVars.length;
     }
 
     private boolean isFeasible(double[] x) {

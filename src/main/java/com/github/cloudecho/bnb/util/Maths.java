@@ -94,6 +94,10 @@ public class Maths {
         public boolean eq() {
             return floor == ceil;
         }
+
+        public boolean eq(int i) {
+            return floor == ceil && floor == i;
+        }
     }
 
     public static double[][] append(double[][] a, double[] row) {
