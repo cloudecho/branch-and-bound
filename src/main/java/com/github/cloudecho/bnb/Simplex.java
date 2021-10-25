@@ -492,7 +492,7 @@ public class Simplex implements Solver {
         // table
         b.append('\n').append(" [  ");
         for (int j = 0; j <= n2(); j++) {
-            b.append(n == j ? " |  " : ' ');
+            b.append(n == j ? "    " : ' ');
             b.append(String.format("%-9d", j));
         }
         for (int i = 0; i <= m2(); i++) {
