@@ -15,25 +15,25 @@ import java.util.Arrays;
  * s.t. AX = b
  *      X >= 0
  *
- * C = (c1 ... c_n)
- * X = (x1 ... x_n)'
- * A = [ a11 ... a1n
- *       ... ... ...
- *      a_m1 ... a_mn]
- * b = (b1 ... b_m)'
+ * C = [c<sub>1</sub> ... c<sub>n</sub>]
+ * X = [x<sub>1</sub> ... x<sub>n</sub>]<sup>T</sup>
+ * A = [a<sub>11</sub> ... a<sub>1n</sub>    // A<sub>1</sub>
+ *      ... ... ...
+ *      a<sub>m1</sub> ... a<sub>mn</sub>]   // A<sub>m</sub>
+ * b = [b<sub>1</sub> ... b<sub>m</sub>]<sup>T</sup>
  * </pre>
  * <p>
- * Simplex table:
+ * Initial simplex table:
  * <pre>
- *   x1  ... x_n  | b
- *   c1  ... c_n  | -z
- *  ---  --- ---  + ---
- *  a11  ... a1n  | b1
- *  ...      ...  | ...
- *  a_m1 ... a_mn | b_m
+ * -z | x<sub>1</sub>  ... x<sub>n</sub> | b
+ *  1 | c<sub>1</sub>  ... c<sub>n</sub> | 0
+ * -- + --  --  -- + --
+ *    | a<sub>11</sub> ... a<sub>1n</sub> | b<sub>1</sub>
+ *    | ...     ... | ...
+ *    | a<sub>m1</sub> ... a<sub>mn</sub> | b<sub>m</sub>
  *
  *  i.e.
- *  [C -z
+ *  [C 0
  *   A b]
  * </pre>
  *

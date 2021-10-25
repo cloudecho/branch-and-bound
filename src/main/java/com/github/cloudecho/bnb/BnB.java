@@ -12,17 +12,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Branch-and-bound for mixed-integer programming.
  * <pre>
- * max (or min) z = c0 + CX
- * s.t. Ai*X <= (or >=, =) b_i , i = 1,...,m
- *      x_j >= (or <>) 0 , j = 1,...,n
- *      x_j integer (for some or all j = 1,..,n)
+ * max (or min) z = c<sub>0</sub> + CX
+ * s.t. A<sub>i</sub>*X &le; (or &ge;, =) b<sub>i</sub> , i = 1,...,m
+ *      x<sub>j</sub> &ge; (or &ne;) 0 , j = 1,...,n
+ *      x<sub>j</sub> integer (for some or all j = 1,..,n)
  *
- * C = (c1 ... c_n)
- * X = (x1 ... x_n)'
- * A = [ a11 ... a1n   // A1
- *       ... ... ...
- *      a_m1 ... a_mn] // Am
- * b = (b1 ... b_m)'
+ * C = [c<sub>1</sub> ... c<sub>n</sub>]
+ * X = [x<sub>1</sub> ... x<sub>n</sub>]<sup>T</sup>
+ * A = [a<sub>11</sub> ... a<sub>1n</sub>    // A<sub>1</sub>
+ *      ... ... ...
+ *      a<sub>m1</sub> ... a<sub>mn</sub>]   // A<sub>m</sub>
+ * b = [b<sub>1</sub> ... b<sub>m</sub>]<sup>T</sup>
  * </pre>
  *
  * @see <a href="https://web.mit.edu/15.053/www/AMP-Chapter-09.pdf">Integer Programming</a>
