@@ -58,6 +58,11 @@ public class Simplex implements Solver {
      */
     private final double[] x;
 
+    private final double[] reducedCost;
+
+    private final double[] shadowPrice;
+    private final int[] yIndexes; // indexes for shadow prices
+
     private int precision = DEFAULT_PRECISION;
 
     /**
@@ -82,6 +87,9 @@ public class Simplex implements Solver {
         }
 
         this.x = new double[n];
+        this.reducedCost = new double[n];
+        this.shadowPrice = new double[m];
+        this.yIndexes = new int[m];
         this.base = new int[m];
         final double[][] table = new double[m + 1][n + 1];
 
@@ -180,8 +188,6 @@ public class Simplex implements Solver {
     }
 
     private void setXnMax() {
-        this.max = Maths.round(-matrix.get(0, n).doubleValue(), precision);
-
         for (int i = 0; i < m2(); i++) {
             double b = Maths.round(matrix.get(i + 1, n), precision); // b
             int j = base[i];
@@ -191,6 +197,21 @@ public class Simplex implements Solver {
             if (j < n) {
                 this.x[j] = b;
             }
+        }
+
+        if (State.NO_SOLUTION == this.state || State.UNBOUNDED == this.state) {
+            return;
+        }
+
+        this.max = Maths.round(-matrix.get(0, n).doubleValue(), precision);
+        for (int j = 0; j < n; j++) {
+            reducedCost[j] = Maths.round(-matrix.get(0, j).doubleValue(), precision);
+        }
+        for (int i = 0; i < m; i++) {
+            final int j = yIndexes[i];
+            shadowPrice[i] = (j < n) ?
+                    reducedCost[j] :
+                    Maths.round(-matrix.get(0, j).doubleValue(), precision);
         }
     }
 
@@ -223,9 +244,9 @@ public class Simplex implements Solver {
         for (int j = n - 1; j >= 0 && count < m; j--) {
             int w = baseVar(j);
             if (w > -1 && base[w] < 0) {
-                base[w] = j; // j is selected
                 vars[j] = -1; // mark selected
-                matrix.gaussian(w + 1, j);
+                pivot(w + 1, j);
+                yIndexes[w] = j;
                 count++;
             }
         }
@@ -240,9 +261,9 @@ public class Simplex implements Solver {
                     continue;
                 }
                 LOG.trace("base", 'r', r, "var", j);
-                base[r - 1] = j;
                 // vars[j] = -1; // mark selected
-                matrix.gaussian(r, j);
+                pivot(r, j);
+                yIndexes[r - 1] = j;
                 count++;
             }
         }
@@ -262,8 +283,10 @@ public class Simplex implements Solver {
             }
             matrix.increaseColumns();
             LOG.trace("base", 'i', i, "aVar", n2());
-            base[i] = n2();
-            matrix.set(i + 1, n2(), 1d);
+            final int j = n2();
+            base[i] = j;
+            yIndexes[i] = j;
+            matrix.set(i + 1, j, 1d);
         }
     }
 
@@ -350,7 +373,7 @@ public class Simplex implements Solver {
         if (!goOn) {
             removeZeroRow();
         }
-        matrix.setColumns(n + 1); // discard aVars
+        // matrix.setColumns(n + 1); // discard aVars
         return goOn;
     }
 
@@ -451,6 +474,14 @@ public class Simplex implements Solver {
         return this.max;
     }
 
+    public double[] getReducedCost() {
+        return reducedCost;
+    }
+
+    public double[] getShadowPrice() {
+        return shadowPrice;
+    }
+
     @Override
     public double getObjective() {
         return this.getMax();
@@ -487,7 +518,21 @@ public class Simplex implements Solver {
         b.append(" base=").append(Arrays.toString(base));
         b.append(" nAvars=").append(nAvars);
         b.append(" state=").append(state);
-        b.append('\n').append(" x=").append(Arrays.toString(x));
+        // x & reduced cost
+        for (int j = 0; j < n; j++) {
+            b.append('\n');
+            b.append(String.format(" var %3d: %-11.6f  reduced cost: %-11.6f",
+                    j + 1,
+                    x[j],
+                    reducedCost[j]));
+        }
+        //shadow price
+        for (int i = 0; i < m; i++) {
+            b.append('\n');
+            b.append(String.format(" row %3d: shadow price: %-11.6f",
+                    i + 1,
+                    shadowPrice[i]));
+        }
 
         // table
         b.append('\n').append(" [  ");

@@ -296,7 +296,10 @@ public class BnB extends GeneralLP implements Solver {
             synchronized (this) {
                 this.state = State.SOLVED;
                 this.objective = node.lp.objective; // incumbent
-                System.arraycopy(node.lp.x, 0, this.x, 0, n);
+                this.x = node.lp.x;
+                this.reducedCost = node.lp.reducedCost;
+                this.slack = node.lp.slack;
+                this.shadowPrice = node.lp.shadowPrice;
             }
             LOG.debug(node, "prune", "incumbent", this.objective);
             return;

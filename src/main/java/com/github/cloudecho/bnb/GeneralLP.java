@@ -43,7 +43,6 @@ public class GeneralLP implements Solver {
     private int n2;
     private double[] c2;
     private double[][] a2;
-    private double[] x2 = new double[0];
 
     /**
      * Objective value
@@ -53,7 +52,14 @@ public class GeneralLP implements Solver {
     /**
      * The vector X
      */
-    protected final double[] x;
+    protected double[] x;
+
+    protected double[] reducedCost;
+    protected double[] shadowPrice;
+    /**
+     * Slack or Surplus
+     */
+    protected double[] slack;
 
     protected int precision = DEFAULT_PRECISION;
 
@@ -95,6 +101,9 @@ public class GeneralLP implements Solver {
         LOG.debug("free vars", this.freeVars);
 
         this.x = new double[n];
+        this.reducedCost = new double[n];
+        this.shadowPrice = new double[m];
+        this.slack = new double[m];
     }
 
     protected int iterations = 0;
@@ -121,12 +130,31 @@ public class GeneralLP implements Solver {
         }
 
         this.objective = c0 + (objectiveType.isMax() ? simplex.getMax() : -simplex.getMax());
-        // X
-        this.x2 = simplex.getX();
+        final double[] x2 = simplex.getX();
+        final double[] rc2 = simplex.getReducedCost();
+
+        // X & reduced cost
         System.arraycopy(x2, 0, this.x, 0, n);
-        for (int i = 0; i < freeVars.length; i++) {
-            int k = freeVars[i]; // for x_k
-            this.x[k - 1] -= x2[n + i];
+        System.arraycopy(rc2, 0, this.reducedCost, 0, n);
+        for (int j = 0; j < freeVars.length; j++) {
+            int k = freeVars[j]; // for x_k
+            this.x[k - 1] -= x2[n + j];
+            this.reducedCost[k - 1] -= rc2[n + j];
+        }
+
+        // (slack or surplus) & shadow price
+        final double[] y2 = simplex.getShadowPrice();
+        for (int i = 0, j = n + freeVars.length; i < m; i++) {
+            final Sign sign = signs[i];
+            this.shadowPrice[i] = (Sign.GE == sign) ? -y2[i] : y2[i];
+
+            // slack or surplus
+            if (Sign.LE == sign || Sign.GE == sign) {
+                this.slack[i] = x2[j];
+            } else {
+                continue;
+            }
+            j++;
         }
     }
 
@@ -212,8 +240,16 @@ public class GeneralLP implements Solver {
         return x;
     }
 
-    public double[] getX2() {
-        return x2;
+    public double[] getReducedCost() {
+        return reducedCost;
+    }
+
+    public double[] getShadowPrice() {
+        return shadowPrice;
+    }
+
+    public double[] getSlack() {
+        return slack;
     }
 
     @Override
@@ -248,13 +284,29 @@ public class GeneralLP implements Solver {
         b.append(objectiveType).append("=").append(Maths.round(objective, precision));
         b.append('\n').append(" iter=").append(iterations);
         b.append(" state=").append(state);
-        b.append("\n n2=").append(n2);
-        b.append(" x2=").append(Arrays.toString(x2));
+        b.append("\n n2=").append(n2).append(" c0=").append(c0);
         b.append("\n freeVars=").append(Arrays.toString(freeVars));
         this.toStringExtra(b);
 
-        b.append('\n').append(" x=").append(Arrays.toString(x));
-        b.append(" c0=").append(c0).append("\n [   ");
+        // x & reduced cost
+        for (int j = 0; j < n; j++) {
+            b.append('\n');
+            b.append(String.format(" var %3d: %-11.6f  reduced cost: %-11.6f",
+                    j + 1,
+                    x[j],
+                    reducedCost[j]));
+        }
+
+        // (slack or surplus) & shadow price
+        for (int i = 0; i < m; i++) {
+            b.append('\n');
+            b.append(String.format(" row %3d: slack or surplus: %-11.6f  shadow price: %-11.6f",
+                    i + 1,
+                    slack[i],
+                    shadowPrice[i]));
+        }
+
+        b.append("\n [   ");
 
         // print column number
         for (int j = 0; j < n; j++) {
