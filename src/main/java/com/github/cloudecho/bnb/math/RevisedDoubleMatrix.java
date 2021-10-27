@@ -75,6 +75,9 @@ public class RevisedDoubleMatrix extends AbstractMatrix<Double> {
             }
             identityColumn[c] = -1;
             table[c] = new double[m];
+            table[c][i] = 1d;
+            table[c][r] = v;
+            return;
         }
         column(c)[r] = v;
     }
