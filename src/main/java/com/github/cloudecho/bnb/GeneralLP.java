@@ -287,26 +287,30 @@ public class GeneralLP implements Solver {
         b.append("\n n2=").append(n2).append(" c0=").append(c0);
         b.append("\n freeVars=").append(Arrays.toString(freeVars));
         this.toStringExtra(b);
+        if (state.ordinal() > 1) {
+            // x & reduced cost
+            b.append("\n\n     VAR  ");
+            b.append(String.format("%20s %20s", "value", "reduced cost"));
+            for (int j = 0; j < n; j++) {
+                b.append('\n');
+                b.append(String.format(" var %3d: %20.4f %20.4f",
+                        j + 1,
+                        x[j],
+                        reducedCost[j]));
+            }
 
-        // x & reduced cost
-        for (int j = 0; j < n; j++) {
-            b.append('\n');
-            b.append(String.format(" var %3d: %-11.6f  reduced cost: %-11.6f",
-                    j + 1,
-                    x[j],
-                    reducedCost[j]));
+            // (slack or surplus) & shadow price
+            b.append("\n\n     ROW  ");
+            b.append(String.format("%20s %20s", "slack or surplus", "shadow price"));
+            for (int i = 0; i < m; i++) {
+                b.append('\n');
+                b.append(String.format(" row %3d: %20.4f %20.4f",
+                        i + 1,
+                        slack[i],
+                        shadowPrice[i]));
+            }
         }
-
-        // (slack or surplus) & shadow price
-        for (int i = 0; i < m; i++) {
-            b.append('\n');
-            b.append(String.format(" row %3d: slack or surplus: %-11.6f  shadow price: %-11.6f",
-                    i + 1,
-                    slack[i],
-                    shadowPrice[i]));
-        }
-
-        b.append("\n [   ");
+        b.append("\n\n [   ");
 
         // print column number
         for (int j = 0; j < n; j++) {

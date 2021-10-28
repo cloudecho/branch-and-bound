@@ -529,24 +529,30 @@ public class Simplex implements Solver {
         b.append(" base=").append(Arrays.toString(base));
         b.append(" nAvars=").append(nAvars);
         b.append(" state=").append(state);
-        // x & reduced cost
-        for (int j = 0; j < n; j++) {
-            b.append('\n');
-            b.append(String.format(" var %3d: %-11.6f  reduced cost: %-11.6f",
-                    j + 1,
-                    x[j],
-                    reducedCost[j]));
-        }
-        //shadow price
-        for (int i = 0; i < m; i++) {
-            b.append('\n');
-            b.append(String.format(" row %3d: shadow price: %-11.6f",
-                    i + 1,
-                    shadowPrice[i]));
-        }
+        if (state.ordinal() > 1) {
+            // x & reduced cost
+            b.append("\n\n     VAR  ");
+            b.append(String.format("%20s %20s", "value", "reduced cost"));
+            for (int j = 0; j < n; j++) {
+                b.append('\n');
+                b.append(String.format(" var %3d: %20.4f %20.4f",
+                        j + 1,
+                        x[j],
+                        reducedCost[j]));
+            }
 
+            // shadow price
+            b.append("\n\n     ROW  ");
+            b.append(String.format("%20s", "shadow price"));
+            for (int i = 0; i < m; i++) {
+                b.append('\n');
+                b.append(String.format(" row %3d: %20.4f",
+                        i + 1,
+                        shadowPrice[i]));
+            }
+        }
         // table
-        b.append('\n').append(" [  ");
+        b.append("\n\n [  ");
         for (int j = 0; j <= n2(); j++) {
             b.append(n == j ? "    " : ' ');
             b.append(String.format("%-9d", j));
