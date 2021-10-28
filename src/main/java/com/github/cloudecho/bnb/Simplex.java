@@ -375,9 +375,10 @@ public class Simplex implements Solver {
             removeZeroRow();
         }
 
+        final int n2 = n2();
         for (int i = 0; i < m; i++) {
             final int j = yIndexes[i];
-            if (j > n) {
+            if (j > n && j <= n2) {
                 shadowPrice[i] = Maths.round(-matrix.getAsDouble(0, j), precision);
             }
         }

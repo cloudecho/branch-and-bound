@@ -82,17 +82,15 @@ public abstract class AbstractMatrix<T extends Number> implements Matrix<T> {
      * Return how many columns grows
      */
     protected int growColumn(int nDelta) {
-        if (extend_n == 0 || nDelta <= 0) {
+        if (nDelta <= 0) {
             return nDelta;
         }
-        final int times = extendTimes();
-        for (int i = 1; i <= times; i++) {
-            int d = (int) Math.ceil(((double) i) * extend_n / times);
-            if (nDelta <= d) {
-                nDelta = d;
-                break;
-            }
+        if (extend_n == 0) {
+            return 0;
         }
+
+        final int times = extendTimes();
+        nDelta = (int) Math.floor(Math.ceil(1d * nDelta / extend_n * times) / times * extend_n);
         this.n2 += nDelta;
         return nDelta;
     }
