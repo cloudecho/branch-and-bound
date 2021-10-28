@@ -16,6 +16,11 @@ public class DoubleMatrix extends AbstractMatrix<Double> {
     }
 
     @Override
+    public double getAsDouble(int r, int c) {
+        return table[r][c];
+    }
+
+    @Override
     public double[] getRow(int r) {
         return table[r];
     }
@@ -26,8 +31,23 @@ public class DoubleMatrix extends AbstractMatrix<Double> {
     }
 
     @Override
+    public void removeRow(int r) {
+        if (r < 0 || m - 1 - r < 0) {
+            return;
+        }
+        System.arraycopy(table, r + 1, table, r, m - 1 - r);
+        table[m - 1] = null;
+        decreaseRows();
+    }
+
+    @Override
     public void set(int r, int c, Number num) {
         table[r][c] = num.doubleValue();
+    }
+
+    @Override
+    public void set(int r, int c, double num) {
+        table[r][c] = num;
     }
 
     @Override
@@ -51,6 +71,13 @@ public class DoubleMatrix extends AbstractMatrix<Double> {
 
             // for each element in this row
             for (int j = 0; j < n; j++) {
+                if (0d == table[r][j]) {
+                    continue;
+                }
+                if (j == c) {
+                    table[i][j] = 0d;
+                    continue;
+                }
                 double v2 = -v * table[r][j] + table[i][j];
                 table[i][j] = Double.isNaN(v2) ? 0 : v2;
             }
@@ -65,6 +92,13 @@ public class DoubleMatrix extends AbstractMatrix<Double> {
         }
 
         for (int j = 0; j < n; j++) {
+            if (0d == table[r][j]) {
+                continue;
+            }
+            if (j == c) {
+                table[r][j] = 1d;
+                continue;
+            }
             table[r][j] /= v;
         }
     }
@@ -76,6 +110,11 @@ public class DoubleMatrix extends AbstractMatrix<Double> {
 
     @Override
     public Double divide(int r1, int c1, int r2, int c2) {
+        return table[r1][c1] / table[r2][c2];
+    }
+
+    @Override
+    public double divideAsDouble(int r1, int c1, int r2, int c2) {
         return table[r1][c1] / table[r2][c2];
     }
 

@@ -141,7 +141,7 @@ public class Simplex implements Solver {
      */
     private boolean pivotOnNegative() {
         boolean goOn = false;
-        for (int i = 1; i <= m; i++) {
+        for (int i = 1; i <= m2(); i++) {
             if (matrix.nonNegative(i, n)) {
                 continue;
             }
@@ -157,7 +157,7 @@ public class Simplex implements Solver {
                 return false; // cycling
             }
 
-            LOG.debug("iter", iterations, "pivot (", i, j, ") on negative", matrix.get(i, j), 'b', matrix.get(i, n));
+            LOG.debug("iter", iterations, "pivot (", i, j, ") on negative", matrix.getAsDouble(i, j), 'b', matrix.getAsDouble(i, n));
             this.iterations++;
             goOn = true;
             pivot(i, j);
@@ -173,7 +173,7 @@ public class Simplex implements Solver {
             if (matrix.nonNegative(r, j) || Maths.contains(base, j)) {
                 continue;
             }
-            final double ratio = matrix.divide(0, j, r, j).doubleValue();
+            final double ratio = matrix.divideAsDouble(0, j, r, j);
             if (minr > ratio || -1 == w) {
                 minr = ratio;
                 w = j;
@@ -189,7 +189,7 @@ public class Simplex implements Solver {
 
     private void setXnMax() {
         for (int i = 0; i < m2(); i++) {
-            double b = Maths.round(matrix.get(i + 1, n), precision); // b
+            double b = Maths.round(matrix.getAsDouble(i + 1, n), precision); // b
             int j = base[i];
             if (j > n || b < 0) { // aVar || not feasible
                 this.state = State.NO_SOLUTION;
@@ -203,9 +203,9 @@ public class Simplex implements Solver {
             return;
         }
 
-        this.max = Maths.round(-matrix.get(0, n).doubleValue(), precision);
+        this.max = Maths.round(-matrix.getAsDouble(0, n), precision);
         for (int j = 0; j < n; j++) {
-            reducedCost[j] = Maths.round(-matrix.get(0, j).doubleValue(), precision);
+            reducedCost[j] = Maths.round(-matrix.getAsDouble(0, j), precision);
         }
         for (int i = 0; i < m; i++) {
             final int j = yIndexes[i];
@@ -318,7 +318,7 @@ public class Simplex implements Solver {
     private boolean pivot() {
         final int w = indexOfMaxc();
         if (LOG.isDebugEnabled()) {
-            LOG.debug("iter=" + iterations, "e=" + w, "maxc=" + Maths.round(matrix.get(0, w), precision));
+            LOG.debug("iter=" + iterations, "e=" + w, "maxc=" + Maths.round(matrix.getAsDouble(0, w), precision));
         }
         if (matrix.nonPositive(0, w)) {
             return this.driveAvars();
@@ -378,7 +378,7 @@ public class Simplex implements Solver {
         for (int i = 0; i < m; i++) {
             final int j = yIndexes[i];
             if (j > n) {
-                shadowPrice[i] = Maths.round(-matrix.get(0, j).doubleValue(), precision);
+                shadowPrice[i] = Maths.round(-matrix.getAsDouble(0, j), precision);
             }
         }
         matrix.setColumns(n + 1); // discard aVars
@@ -387,18 +387,19 @@ public class Simplex implements Solver {
     }
 
     private void removeZeroRow() {
-        for (int r = 1; r <= m2(); r++) {
+        final int m2 = m2();
+        for (int r = 1; r <= m2; r++) {
             if (base[r - 1] < n) { // non-aVar
                 continue;
             }
             if (!matrix.existsNonZeroInRow(r, n + 1)) {
                 // remove r-th row
-                for (int i = r; i < m2(); i++) {
-                    matrix.setRowTo(i, i + 1);
+                for (int i = r; i < m2; i++) {
                     base[i - 1] = base[i];
+                    yIndexes[i - 1] = yIndexes[i];
                 }
-                base[m2() - 1] = -1;
-                matrix.decreaseRows();
+                base[m2 - 1] = -1;
+                matrix.removeRow(r);
                 LOG.debug("removeZeroRow", r);
             }
         }
@@ -569,7 +570,7 @@ public class Simplex implements Solver {
                     b.append(" | ");
                 }
                 b.append((i > 0 && j == base[i - 1]) ? '*' : ' '); // base var
-                b.append(String.format("%-8.3f", matrix.get(i, j).doubleValue())).append(' ');
+                b.append(String.format("%-8.3f", matrix.getAsDouble(i, j))).append(' ');
             }
         }
         b.setCharAt(b.length() - 1, ']');

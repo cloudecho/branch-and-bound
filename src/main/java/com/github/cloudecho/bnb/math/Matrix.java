@@ -1,9 +1,13 @@
 package com.github.cloudecho.bnb.math;
 
 public interface Matrix<T extends Number> {
-    T get(int r, int c);
+    Number get(int r, int c);
+
+    double getAsDouble(int r, int c);
 
     void set(int r, int c, Number num);
+
+    void set(int r, int c, double num);
 
     void gaussian(int r, int c);
 
@@ -13,9 +17,7 @@ public interface Matrix<T extends Number> {
 
     void setRow(int r, Object rowData);
 
-    default void setRowTo(int r, int r2) {
-        setRow(r, getRow(r2));
-    }
+    void removeRow(int r);
 
     void setRows(int m);
 
@@ -36,6 +38,8 @@ public interface Matrix<T extends Number> {
     void negate(int r, int c);
 
     T divide(int r1, int c1, int r2, int c2);
+
+    double divideAsDouble(int r1, int c1, int r2, int c2);
 
     boolean existsPositiveInRow(int r, int endIndex);
 

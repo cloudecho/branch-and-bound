@@ -30,8 +30,18 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
     }
 
     @Override
+    public double getAsDouble(int r, int c) {
+        return table[r][c].doubleValue();
+    }
+
+    @Override
     public void set(int r, int c, Number num) {
         table[r][c] = BigDecimal.valueOf(num.doubleValue());
+    }
+
+    @Override
+    public void set(int r, int c, double num) {
+        table[r][c] = BigDecimal.valueOf(num);
     }
 
     @Override
@@ -55,6 +65,14 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
 
             // for each element in this row
             for (int j = 0; j < n; j++) {
+                if (isZero(table[r][j])) {
+                    continue;
+                }
+                if (j == c) {
+                    table[i][j] = BigDecimal.ZERO;
+                    continue;
+                }
+
                 BigDecimal v2 = v.multiply(table[r][j], mathContext)
                         .negate(mathContext)
                         .add(table[i][j], mathContext);
@@ -71,6 +89,13 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
         }
 
         for (int j = 0; j < n; j++) {
+            if (isZero(r, j)) {
+                continue;
+            }
+            if (j == c) {
+                table[r][j] = BigDecimal.ONE;
+                continue;
+            }
             table[r][j] = table[r][j].divide(v, mathContext);
         }
     }
@@ -94,6 +119,16 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
     }
 
     @Override
+    public void removeRow(int r) {
+        if (r < 0 || m - 1 - r < 0) {
+            return;
+        }
+        System.arraycopy(table, r + 1, table, r, m - 1 - r);
+        table[m - 1] = null;
+        decreaseRows();
+    }
+
+    @Override
     public void negate(int r, int c) {
         table[r][c] = table[r][c].negate(mathContext);
     }
@@ -101,6 +136,11 @@ public class BigDecimalMatrix extends AbstractMatrix<BigDecimal> {
     @Override
     public BigDecimal divide(int r1, int c1, int r2, int c2) {
         return table[r1][c1].divide(table[r2][c2], mathContext);
+    }
+
+    @Override
+    public double divideAsDouble(int r1, int c1, int r2, int c2) {
+        return divide(r1, c1, r2, c2).doubleValue();
     }
 
     @Override

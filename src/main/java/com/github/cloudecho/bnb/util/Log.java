@@ -88,6 +88,12 @@ public class Log {
                 b.append(Arrays.toString((int[]) m));
             } else if (m instanceof double[]) {
                 b.append(Arrays.toString((double[]) m));
+            } else if (m instanceof Throwable) {
+                Throwable ex = ((Throwable) m);
+                b.append(ex);
+                for (StackTraceElement e : ex.getStackTrace()) {
+                    b.append("\n at ").append(e);
+                }
             } else {
                 b.append(m);
             }

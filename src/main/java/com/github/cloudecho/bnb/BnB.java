@@ -253,6 +253,8 @@ public class BnB extends GeneralLP implements Solver {
             if (null != node) {
                 solve(node);
             }
+        } catch (Throwable ex) {
+            LOG.error(ex);
         } finally {
             taskCounter.decrementAndGet();
             synchronized (this) {
@@ -345,12 +347,7 @@ public class BnB extends GeneralLP implements Solver {
         double[] b1 = Maths.append(lp0.b, cf.floor);
         GeneralLP lp1 = new GeneralLP(lp0.objectiveType, lp0.c0, lp0.c, a2, signs1, b1, lp0.freeVars);
         Node child1 = new Node(lp1, parent, Node.LEFT);
-        if (cf.eq()) {
-            System.arraycopy(lp0.x, 0, lp1.x, 0, lp0.x.length);
-            createBranch(child1);
-        } else {
-            nodes.addLast(child1);
-        }
+        nodes.addLast(child1);
 
         // LP2: right branch (>= ceil)
         LOG.debug(parent, "right branch x(", v, ") >=", cf.ceil);
@@ -358,12 +355,7 @@ public class BnB extends GeneralLP implements Solver {
         double[] b2 = Maths.append(lp0.b, cf.ceil);
         GeneralLP lp2 = new GeneralLP(lp0.objectiveType, lp0.c0, lp0.c, a2, signs2, b2, lp0.freeVars);
         Node child2 = new Node(lp2, parent, Node.RIGHT);
-        if (cf.eq()) {
-            System.arraycopy(lp0.x, 0, lp2.x, 0, lp0.x.length);
-            createBranch(child2);
-        } else {
-            nodes.addLast(child2);
-        }
+        nodes.addLast(child2);
 
         parent.lp = null; // release memory
     }
@@ -387,23 +379,13 @@ public class BnB extends GeneralLP implements Solver {
         LOG.debug(parent, "left branch x(", v, ") =", 0);
         GeneralLP lp1 = new GeneralLP(lp0.objectiveType, lp0.c0, c2, a2, lp0.signs, bLeft, lp0.freeVars);
         Node child1 = new Node(lp1, parent, Node.LEFT).binary(v);
-        if (cf.eq(0)) {
-            System.arraycopy(lp0.x, 0, lp1.x, 0, lp0.x.length);
-            createBranch(child1);
-        } else {
-            nodes.addLast(child1);
-        }
+        nodes.addLast(child1);
 
         // LP2: right branch (=1)
         LOG.debug(parent, "right branch x(", v, ") =", 1);
         GeneralLP lp2 = new GeneralLP(lp0.objectiveType, c0Right, c2, a2, lp0.signs, bRight, lp0.freeVars);
         Node child2 = new Node(lp2, parent, Node.RIGHT).binary(v);
-        if (cf.eq(1)) {
-            System.arraycopy(lp0.x, 0, lp2.x, 0, lp0.x.length);
-            createBranch(child2);
-        } else {
-            nodes.addLast(child2);
-        }
+        nodes.addLast(child2);
 
         parent.lp = null; // release memory
     }
